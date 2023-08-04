@@ -2,12 +2,17 @@ import '../styles/globals.css'
 import { AppProps } from 'next/app'
 import Head from 'next/head'
 import { MantineProvider } from '@mantine/core'
+import { Notifications } from '@mantine/notifications'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+
+// Create react query client
+const queryClient = new QueryClient()
 
 export default function App(props: AppProps) {
   const { Component, pageProps } = props
 
   return (
-    <>
+    <QueryClientProvider client={queryClient}>
       <Head>
         <title>Slack-clone</title>
         <meta
@@ -50,8 +55,9 @@ export default function App(props: AppProps) {
           },
         }}
       >
+        <Notifications position="top-right" />
         <Component {...pageProps} />
       </MantineProvider>
-    </>
+    </QueryClientProvider>
   )
 }

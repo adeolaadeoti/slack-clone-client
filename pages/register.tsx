@@ -16,8 +16,13 @@ import Button from '../components/button'
 import { BiLogoGoogle } from 'react-icons/bi'
 import { FaApple } from 'react-icons/fa'
 import { IoLogoGithub } from 'react-icons/io'
+import { useMutation } from '@tanstack/react-query'
+import { useRouter } from 'next/router'
+import axios from '../services/axios'
+import { notifications } from '@mantine/notifications'
 
 export default function register() {
+  const router = useRouter()
   const form = useForm({
     initialValues: {
       email: '',
@@ -27,9 +32,21 @@ export default function register() {
     },
   })
 
-  async function handleRegister() {
-    console.log('called')
-  }
+  const mutation = useMutation({
+    mutationFn: (body) => {
+      return axios.post('/auth/register', body)
+    },
+    onError(error: any) {
+      notifications.show({
+        message: error?.response?.data?.data?.message,
+        color: 'red',
+        p: 'md',
+      })
+    },
+    onSuccess: () => {
+      router.push('/verify')
+    },
+  })
 
   return (
     <Center p="xl" h="100vh" w="100vw" style={{ backgroundColor: '#111317' }}>
@@ -47,7 +64,11 @@ export default function register() {
           </Text>
 
           <Paper radius="md" p="xl" withBorder w={'40rem'} mt="xl">
-            <form onSubmit={form.onSubmit(handleRegister)}>
+            <form
+              onSubmit={form.onSubmit(() =>
+                mutation.mutate({ email: form.values.email } as any)
+              )}
+            >
               <Stack>
                 <Input
                   required
@@ -59,7 +80,9 @@ export default function register() {
                   }
                   error={form.errors.email && 'Invalid email'}
                 />
-                <Button type="submit">Continue</Button>
+                <Button loading={mutation.isLoading} type="submit">
+                  {mutation.isLoading ? '' : 'Continue'}
+                </Button>
                 <Divider label="or" labelPosition="center" my="md" />
                 <MantineButton
                   leftIcon={<BiLogoGoogle size="1.8rem" />}

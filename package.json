@@ -12,12 +12,16 @@
     "@mantine/form": "^6.0.17",
     "@mantine/hooks": "^6.0.17",
     "@mantine/next": "^6.0.17",
+    "@mantine/notifications": "^6.0.17",
+    "@tanstack/react-query": "^4.32.1",
+    "axios": "^1.4.0",
     "next": "latest",
     "react": "18.0.0",
     "react-dom": "18.0.0",
     "react-icons": "^4.10.1"
   },
   "devDependencies": {
+    "@tanstack/eslint-plugin-query": "^4.32.1",
     "@types/node": "17.0.25",
     "@types/react": "18.0.5",
     "@types/react-dom": "18.0.1",

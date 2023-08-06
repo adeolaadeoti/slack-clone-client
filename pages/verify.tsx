@@ -15,8 +15,9 @@ import { useRouter } from 'next/router'
 import axios from '../services/axios'
 import { notifications } from '@mantine/notifications'
 import { Loader } from '@mantine/core'
+import { NextPage } from 'next'
 
-export default function verify() {
+const Verify: NextPage = () => {
   const [email, setEmail] = React.useState('')
   const router = useRouter()
   const form = useForm({
@@ -34,12 +35,12 @@ export default function verify() {
     },
     onError(error: any) {
       notifications.show({
-        message: error?.response?.data?.data?.message,
+        message: error?.response?.data?.data?.name,
         color: 'red',
         p: 'md',
       })
     },
-    onSuccess: (data: any) => {
+    onSuccess: (data) => {
       console.log(data)
       notifications.show({
         message: `Confirmed as ${data?.data?.data?.email}`,
@@ -47,9 +48,8 @@ export default function verify() {
         p: 'md',
       })
       localStorage.removeItem('signUpEmail')
-      //   axios.defaults.headers.common['authorization'] = data?.data?.data?.token
       localStorage.setItem('access-token', data?.data?.data?.token)
-      router.push('/onboarding')
+      router.push('/workspaces')
     },
   })
 
@@ -59,13 +59,13 @@ export default function verify() {
 
       const signUpEmail = localStorage.getItem('signUpEmail')
       if (!signUpEmail) {
-        router.push('/')
+        router.push('/workspaces')
       }
     }
   }, [])
 
   return (
-    <Center p="xl" h="100vh" w="100vw" style={{ backgroundColor: '#111317' }}>
+    <Center p="xl" h="100vh" w="100vw" bg="#111317">
       <Stack justify="between">
         <Flex direction="column" align="center">
           <SlackLogo />
@@ -146,3 +146,5 @@ export default function verify() {
     </Center>
   )
 }
+
+export default Verify

@@ -20,8 +20,9 @@ import { useMutation } from '@tanstack/react-query'
 import { useRouter } from 'next/router'
 import axios from '../services/axios'
 import { notifications } from '@mantine/notifications'
+import { NextPage } from 'next'
 
-export default function register() {
+const Register: NextPage = () => {
   const router = useRouter()
   const form = useForm({
     initialValues: {
@@ -38,7 +39,7 @@ export default function register() {
     },
     onError(error: any) {
       notifications.show({
-        message: error?.response?.data?.data?.message,
+        message: error?.response?.data?.data?.name,
         color: 'red',
         p: 'md',
       })
@@ -50,7 +51,7 @@ export default function register() {
   })
 
   return (
-    <Center p="xl" h="100vh" w="100vw" style={{ backgroundColor: '#111317' }}>
+    <Center p="xl" h="100vh" w="100vw" bg="#111317">
       <Stack justify="between">
         <Flex direction="column" align="center">
           <SlackLogo />
@@ -174,3 +175,5 @@ export default function register() {
     </Center>
   )
 }
+
+export default Register

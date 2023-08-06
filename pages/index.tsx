@@ -4,7 +4,7 @@ import { Box, Text } from '@mantine/core'
 
 const Home: NextPage = () => {
   return (
-    <Box>
+    <Box bg="red" h="100vh">
       <Head>
         <title>Slack clone app</title>
         <meta name="description" content="This is a clone version of slack" />

@@ -1,6 +1,6 @@
 import type { NextPage } from 'next'
 import Head from 'next/head'
-import { Box } from '@mantine/core'
+import { Box, Text } from '@mantine/core'
 
 const Home: NextPage = () => {
   return (
@@ -10,6 +10,7 @@ const Home: NextPage = () => {
         <meta name="description" content="This is a clone version of slack" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
+      <Text>Hello from home</Text>
     </Box>
   )
 }

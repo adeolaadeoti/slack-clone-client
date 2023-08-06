@@ -43,7 +43,8 @@ export default function register() {
         p: 'md',
       })
     },
-    onSuccess: () => {
+    onSuccess() {
+      localStorage.setItem('signUpEmail', form.values.email)
       router.push('/verify')
     },
   })

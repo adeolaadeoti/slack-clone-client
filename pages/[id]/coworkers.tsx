@@ -1,4 +1,12 @@
-import { Avatar, Flex, Grid, Skeleton, Stack, Text } from '@mantine/core'
+import {
+  Avatar,
+  Flex,
+  Grid,
+  Skeleton,
+  Stack,
+  Text,
+  UnstyledButton,
+} from '@mantine/core'
 import { NextPage } from 'next'
 import { useForm } from '@mantine/form'
 import Button from '../../components/button'
@@ -45,8 +53,8 @@ const Coworkers: NextPage = () => {
         p: 'md',
       })
     },
-    onSuccess(data) {
-      router.push(`/${data?.data?.data?._id}/channels`)
+    onSuccess() {
+      router.push(`/${id}/channels`)
     },
   })
 
@@ -101,14 +109,13 @@ const Coworkers: NextPage = () => {
           >
             {mutation.isLoading ? '' : 'Next'}
           </Button>
-          <Button
-            variant="unstyled"
+          <UnstyledButton
             fw="normal"
             fz="xs"
             onClick={() => router.push(`/${id}/channels`)}
           >
             Skip this step
-          </Button>
+          </UnstyledButton>
         </Flex>
       </Grid.Col>
     </Grid>

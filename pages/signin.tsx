@@ -22,7 +22,7 @@ import axios from '../services/axios'
 import { notifications } from '@mantine/notifications'
 import { NextPage } from 'next'
 
-const Register: NextPage = () => {
+const Signin: NextPage = () => {
   const router = useRouter()
   const form = useForm({
     initialValues: {
@@ -35,7 +35,7 @@ const Register: NextPage = () => {
 
   const mutation = useMutation({
     mutationFn: (body) => {
-      return axios.post('/auth/register', body)
+      return axios.post('/auth/signin', body)
     },
     onError(error: any) {
       notifications.show({
@@ -56,7 +56,7 @@ const Register: NextPage = () => {
         <Flex direction="column" align="center">
           <SlackLogo />
           <Text fz="3xl" fw={600} mt="3xl" c="white">
-            First, enter your email
+            Sign in to Slack
           </Text>
           <Text fz="sm" mt="xs">
             We suggest using the{' '}
@@ -83,7 +83,7 @@ const Register: NextPage = () => {
                   error={form.errors.email && 'Invalid email'}
                 />
                 <Button loading={mutation.isLoading} type="submit">
-                  {mutation.isLoading ? '' : 'Continue'}
+                  {mutation.isLoading ? '' : 'Sign in with email'}
                 </Button>
                 <Divider label="or" labelPosition="center" my="md" />
                 <MantineButton
@@ -107,7 +107,7 @@ const Register: NextPage = () => {
                     },
                   })}
                 >
-                  Continue with Google
+                  Sign in with Google
                 </MantineButton>
                 <MantineButton
                   leftIcon={<FaApple size="1.8rem" />}
@@ -130,14 +130,14 @@ const Register: NextPage = () => {
                     },
                   })}
                 >
-                  Continue with Apple
+                  Sign in with Apple
                 </MantineButton>
                 <Stack spacing="xs" mt="lg">
                   <Text size="xs" align="center">
-                    Already using Slack?
+                    New to Slack?
                   </Text>
-                  <Anchor size="xs" align="center" href="/signin">
-                    Sign in to an existing workspace
+                  <Anchor size="xs" align="center" href="/register">
+                    Create an account
                   </Anchor>
                 </Stack>
               </Stack>
@@ -176,4 +176,4 @@ const Register: NextPage = () => {
   )
 }
 
-export default Register
+export default Signin

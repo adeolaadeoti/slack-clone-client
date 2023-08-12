@@ -47,7 +47,7 @@ const Verify: NextPage = () => {
         color: 'green',
         p: 'md',
       })
-      localStorage.removeItem('signUpEmail')
+      // localStorage.removeItem('signUpEmail')
       localStorage.setItem('access-token', data?.data?.data?.token)
       router.push('/workspaces')
     },
@@ -59,7 +59,7 @@ const Verify: NextPage = () => {
 
       const signUpEmail = localStorage.getItem('signUpEmail')
       if (!signUpEmail) {
-        router.push('/workspaces')
+        router.push('/signin')
       }
     }
   }, [])

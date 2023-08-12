@@ -32,7 +32,6 @@ const Workspaces: NextPage = () => {
         mt="lg"
         onClick={() => mutation.mutate()}
       >
-        
         {mutation.isLoading ? '' : 'Create Workspace'}
       </Button>
     </Stack>

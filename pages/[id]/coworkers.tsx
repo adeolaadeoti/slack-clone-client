@@ -14,12 +14,15 @@ const Coworkers: NextPage = () => {
   const { id } = router.query
   const form = useForm({
     initialValues: {
-      name: '',
+      emails: [''],
+      organisationId: id,
     },
     validate: {
-      name: (val) => (val.length > 3 ? null : 'Invalid name'),
+      emails: (val) => (val.length > 0 ? null : 'Email must be more than one'),
     },
   })
+
+  const [isDisabled, setIsDisabled] = React.useState(true)
 
   const query = useQuery(
     ['organisation-coworkers'],
@@ -33,7 +36,7 @@ const Coworkers: NextPage = () => {
 
   const mutation = useMutation({
     mutationFn: (body) => {
-      return axios.post('/onboard', body)
+      return axios.post('/teammates', body)
     },
     onError(error: any) {
       notifications.show({
@@ -43,13 +46,13 @@ const Coworkers: NextPage = () => {
       })
     },
     onSuccess(data) {
-      router.push(`add-teammates/${data?.data?.data?._id}`)
+      router.push(`/${data?.data?.data?._id}/channels`)
     },
   })
 
   return (
     <Grid h="100vh" m="0">
-      <Grid.Col span={2}>
+      <Grid.Col span={2} p="lg">
         {organisationName && (
           <Flex align="center" gap="sm">
             <Avatar size="lg" color="cyan" radius="xl">
@@ -77,16 +80,36 @@ const Coworkers: NextPage = () => {
           Who else is on the <br /> {organisationName} team?
         </Text>
 
-        <form
-          onSubmit={form.onSubmit(() =>
-            mutation.mutate({ name: form.values.name } as any)
-          )}
-        >
-          <TagInputs />
-          <Button loading={mutation.isLoading} type="submit" mt="lg" w="10%">
+        <TagInputs
+          onValueChange={(val) => {
+            form.setFieldValue('emails', val)
+            setIsDisabled(false)
+          }}
+        />
+        <Flex align="center" gap="md" mt="lg">
+          <Button
+            disabled={isDisabled}
+            onClick={() =>
+              mutation.mutate({
+                emails: form.values.emails,
+                organisationId: id,
+              } as any)
+            }
+            loading={mutation.isLoading}
+            type="submit"
+            w="10%"
+          >
             {mutation.isLoading ? '' : 'Next'}
           </Button>
-        </form>
+          <Button
+            variant="unstyled"
+            fw="normal"
+            fz="xs"
+            onClick={() => router.push(`/${id}/channels`)}
+          >
+            Skip this step
+          </Button>
+        </Flex>
       </Grid.Col>
     </Grid>
   )

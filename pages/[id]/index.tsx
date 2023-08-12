@@ -67,7 +67,7 @@ const Onboarding: NextPage = () => {
 
   return (
     <Grid h="100vh" m="0">
-      <Grid.Col span={2}>
+      <Grid.Col span={2} p="lg">
         {organisationName && (
           <Flex align="center" gap="sm">
             <Avatar size="lg" color="cyan" radius="xl">

@@ -6,6 +6,7 @@ import DefaultLayout from '../components/pages/default-layout'
 import React from 'react'
 import { LoadingOverlay, Text } from '@mantine/core'
 import { useRouter } from 'next/router'
+import MessageLayout from '../components/pages/message-layout'
 
 const Home: NextPage = () => {
   const router = useRouter()
@@ -53,8 +54,12 @@ const Home: NextPage = () => {
         onChannelChange={handleChannelChange}
         onCoworkerChange={handleCoworkerChange}
       >
-        {selectedView === 'channel' && <Text>{selectedData?.name}</Text>}
-        {selectedView === 'coworker' && <Text>{selectedData?.username}</Text>}
+        {selectedView === 'channel' && (
+          <MessageLayout data={selectedData} appearance="channel" />
+        )}
+        {selectedView === 'coworker' && (
+          <MessageLayout data={selectedData} appearance="coworker" />
+        )}
       </DefaultLayout>
     </>
   )

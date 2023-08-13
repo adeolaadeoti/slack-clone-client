@@ -16,14 +16,14 @@ import { getColorByIndex } from '../../utils/helpers'
 import { TbHeadphonesOff, TbHeadphones } from 'react-icons/tb'
 import { HiPlus } from 'react-icons/hi'
 import React from 'react'
+import AccountSwitcher from '../account-switcher'
 
 const useStyles = createStyles((theme) => ({
   section: {
     marginBottom: theme.spacing.sm,
-    padding: theme.spacing.sm,
+    padding: theme.spacing.md,
 
     '&:not(:first-of-type)': {
-      paddingTop: theme.spacing.md,
       borderTop: `1px solid ${theme.colors.dark[4]}`,
     },
   },
@@ -82,14 +82,8 @@ export default function DefaultLayout({
     <Grid h="100vh" m="0">
       <Grid.Col span={2} p="0">
         <Navbar>
-          <Navbar.Section className={classes.section} mt="sm">
-            <Flex align="center" gap="sm">
-              <Avatar size="lg" color="gold" radius="xl">
-                {data?.name[0].toUpperCase()}
-              </Avatar>
-
-              <Text transform="capitalize">{data?.name}</Text>
-            </Flex>
+          <Navbar.Section mt="sm" p="sm" pt="xs" pb="1.18rem">
+            <AccountSwitcher data={data} />
           </Navbar.Section>
 
           <Navbar.Section className={classes.section}>

@@ -47,11 +47,15 @@ a {
 .editorClassName {
   border-bottom-left-radius: 1rem !important;
   border-bottom-right-radius: 1rem !important;
-  color: white !important;
+  /* color: white !important; */
   padding: 1rem 1.5rem !important;
   background-color: #27282c !important;
   min-height: 8rem !important;
   font-size: 1.5rem !important;
+}
+.editorClassName a {
+  color: #339af0 !important;
+  text-decoration: underline !important;
 }
 .public-DraftStyleDefault-ltr {
   margin: 0 !important;

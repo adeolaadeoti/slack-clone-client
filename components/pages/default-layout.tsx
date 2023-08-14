@@ -4,7 +4,6 @@ import {
   Text,
   Group,
   Grid,
-  Flex,
   Avatar,
   Tooltip,
   ActionIcon,

@@ -24,3 +24,67 @@ a {
   margin: 0;
   box-sizing: border-box;
 }
+
+.toolbarClassName {
+  background: #27282c !important;
+  border: none !important;
+  margin: 0 !important;
+  padding-top: 1rem !important;
+  border-top-left-radius: 1rem !important;
+  border-top-right-radius: 1rem !important;
+}
+
+.toolbarClassName img {
+  filter: invert(100%) sepia(2%) saturate(1333%) hue-rotate(202deg)
+    brightness(75%) contrast(87%);
+}
+
+.rdw-option-wrapper {
+  background: #27282c !important;
+  border: none !important;
+}
+
+.editorClassName {
+  border-bottom-left-radius: 1rem !important;
+  border-bottom-right-radius: 1rem !important;
+  color: white !important;
+  padding: 1rem 1.5rem !important;
+  background-color: #27282c !important;
+  min-height: 8rem !important;
+  font-size: 1.5rem !important;
+}
+.public-DraftStyleDefault-ltr {
+  margin: 0 !important;
+}
+
+.inline-style {
+  border-right: 1px solid #404146 !important;
+  padding-right: 0.5rem;
+  margin-right: 0.5rem;
+}
+
+.rdw-emoji-modal,
+.rdw-link-modal {
+  background-color: #27282c !important;
+  border: 1px solid #404146 !important;
+  bottom: 2.5rem !important;
+  top: unset !important;
+  box-shadow: unset !important;
+  height: 27rem !important;
+  border-radius: 1rem !important;
+}
+.rdw-link-modal {
+  font-size: 1.2rem !important;
+  height: unset !important;
+}
+
+.rdw-link-modal-label {
+  font-size: 1.2rem !important;
+}
+.rdw-link-modal-input {
+  border: unset !important;
+}
+.rdw-link-modal-btn {
+  background-color: #27282c !important;
+  border: 1px solid #404146 !important;
+}

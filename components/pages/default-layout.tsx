@@ -16,6 +16,10 @@ import { TbHeadphonesOff, TbHeadphones } from 'react-icons/tb'
 import { HiPlus } from 'react-icons/hi'
 import React from 'react'
 import AccountSwitcher from '../account-switcher'
+import MessageLayout from './message-layout'
+import { useRouter } from 'next/router'
+import { useQuery } from '@tanstack/react-query'
+import axios from '../../services/axios'
 
 const useStyles = createStyles((theme) => ({
   section: {
@@ -59,21 +63,29 @@ const useStyles = createStyles((theme) => ({
   },
 }))
 
-export default function DefaultLayout({
-  children,
-  data,
-  onChannelChange,
-  onCoworkerChange,
-}: any) {
+export default function DefaultLayout({ children, data, channelData }: any) {
+  const router = useRouter()
+  const { id } = router.query
+
   const { classes } = useStyles()
-  const [selected, setSelected] = React.useState(data?.channels?.[0])
+  const [selected, setSelected] = React.useState(channelData)
+
+  const query = useQuery(
+    ['channel-layout'],
+    () => axios.get(`/channel/${id}`),
+    {
+      enabled: !!id,
+      onSuccess(data) {
+        setSelected(data?.data?.data)
+      },
+    }
+  )
 
   function handleChannel(channel: any) {
-    onChannelChange(channel)
+    router.push(`/client/${channel?._id}`)
     setSelected(channel)
   }
   function handleCoworker(data: any) {
-    onCoworkerChange(data)
     setSelected(data)
   }
 
@@ -105,8 +117,8 @@ export default function DefaultLayout({
                 className={classes.collectionLink}
                 style={{
                   transition: 'all .2s ease',
-                  fontWeight: selected._id === channel._id ? 'bold' : '400',
-                  color: selected._id === channel._id ? 'white' : '#C1C2C5',
+                  fontWeight: selected?._id === channel._id ? 'bold' : '400',
+                  color: selected?._id === channel._id ? 'white' : '#C1C2C5',
                 }}
               >
                 # {channel?.name}
@@ -133,8 +145,8 @@ export default function DefaultLayout({
                 className={classes.collectionLink}
                 style={{
                   transition: 'all .2s ease',
-                  fontWeight: selected._id === coWorker._id ? 'bold' : '400',
-                  color: selected._id === coWorker._id ? 'white' : '#C1C2C5',
+                  fontWeight: selected?._id === coWorker._id ? 'bold' : '400',
+                  color: selected?._id === coWorker._id ? 'white' : '#C1C2C5',
                 }}
               >
                 <Avatar size="md" color={getColorByIndex(index)} radius="xl">

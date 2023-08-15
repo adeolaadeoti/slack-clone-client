@@ -7,28 +7,16 @@ import {
   Text,
   useMantineTheme,
 } from '@mantine/core'
-import {
-  EditorState,
-  ContentState,
-  convertToRaw,
-  Entity,
-  Modifier,
-} from 'draft-js'
+import { EditorState } from 'draft-js'
 import { Editor } from 'react-draft-wysiwyg'
 import { convertToHTML } from 'draft-convert'
-import DOMPurify from 'dompurify' // Import the library
-import createEmojiPlugin from 'draft-js-emoji-plugin'
-
+import DOMPurify from 'dompurify'
 import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css'
 import { getColorByIndex } from '../utils/helpers'
 
-const emojiPlugin = createEmojiPlugin({
-  selectButtonContent: '😊',
-  //   theme: defaultTheme, // This should be imported from your created theme file
-})
-const { EmojiSuggestions, EmojiSelect } = emojiPlugin
+const Message = ({ data }: any) => {
+  const [messageData, setMessageData] = React.useState<any>()
 
-const Message = () => {
   const [editorState, setEditorState] = useState(() =>
     EditorState.createEmpty()
   )
@@ -39,17 +27,13 @@ const Message = () => {
       name: 'adeola.adeoti',
       time: 'Aug 1st at 2:21:45 AM',
       timeRender: '2:21 AM',
-      content: '<p>joined #design. Also, mumu and 2 others joined.</p>',
+      content: `<p>joined. Also, mumu and 2 others joined.</p>`,
     },
   ])
 
   const handleChange = (newEditorState: EditorState) => {
     setEditorState(newEditorState)
   }
-
-  //   React.useState(() => {
-
-  //   }, [newEditorState])
 
   const handleReturn = (
     e: React.KeyboardEvent<{}>,
@@ -60,7 +44,6 @@ const Message = () => {
       e.preventDefault()
       const contentState = editorState.getCurrentContent()
 
-      //   Convert ContentState to HTML
       const htmlContent = convertToHTML({
         styleToHTML: (style) => {
           if (style === 'BOLD') {
@@ -109,6 +92,10 @@ const Message = () => {
     return returnValue
   }
 
+  React.useEffect(() => {
+    setMessageData(data)
+  }, [data])
+
   return (
     <>
       <Stack p="lg">
@@ -138,17 +125,17 @@ const Message = () => {
 
       <Paper
         radius="md"
-        mt="xl"
+        mt="xs"
         m="lg"
         style={{ border: '1.5px solid #404146', borderRadius: '1rem' }}
       >
         <Editor
+          placeholder={`Message #${data?.name.toLowerCase()}`}
           editorState={editorState}
           toolbarClassName="toolbarClassName"
           wrapperClassName="wrapperClassName"
           editorClassName="editorClassName"
           onEditorStateChange={handleChange}
-          // plugins={[createEmojiPlugin()]}
           handleReturn={handleReturn}
           toolbar={{
             options: ['inline', 'link', 'list', 'emoji'],

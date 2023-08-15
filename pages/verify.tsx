@@ -49,7 +49,7 @@ const Verify: NextPage = () => {
       })
       // localStorage.removeItem('signUpEmail')
       localStorage.setItem('access-token', data?.data?.data?.token)
-      router.push('/workspaces')
+      router.push('/')
     },
   })
 

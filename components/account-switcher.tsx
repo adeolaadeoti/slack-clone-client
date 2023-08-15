@@ -20,6 +20,7 @@ import {
 } from 'react-icons/tb'
 
 import { LuChevronsUpDown } from 'react-icons/lu'
+import { useRouter } from 'next/router'
 
 const useStyles = createStyles((theme) => ({
   user: {
@@ -39,8 +40,16 @@ interface AccountSwitcherProps {
 }
 
 export default function AccountSwitcher({ data }: AccountSwitcherProps) {
+  const router = useRouter()
   const { classes, theme, cx } = useStyles()
   const [userMenuOpened, setUserMenuOpened] = useState(false)
+
+  function handleLogout() {
+    localStorage.removeItem('organisationId')
+    localStorage.removeItem('signUpEmail')
+    localStorage.removeItem('access-token')
+    router.push('/signin')
+  }
 
   return (
     <>
@@ -61,7 +70,7 @@ export default function AccountSwitcher({ data }: AccountSwitcherProps) {
                 </Text>
               </ThemeIcon>
               <Text weight="bold" size="sm" pl="sm" mr="md">
-                {data.name}
+                {data?.name}
               </Text>
               <LuChevronsUpDown size="1.4rem" />
             </Group>
@@ -71,21 +80,22 @@ export default function AccountSwitcher({ data }: AccountSwitcherProps) {
           <Menu.Item
             p="sm"
             fz="xs"
-            icon={<TbHeart size="0.9rem" color={theme.colors.red[6]} />}
+            onClick={() => router.push('/')}
+            icon={<TbHeart size="1.5rem" color={theme.colors.red[6]} />}
           >
-            Liked posts
+            Workspaces
           </Menu.Item>
           <Menu.Item
             p="sm"
             fz="xs"
-            icon={<TbStar size="0.9rem" color={theme.colors.yellow[6]} />}
+            icon={<TbStar size="1.5rem" color={theme.colors.yellow[6]} />}
           >
             Saved posts
           </Menu.Item>
           <Menu.Item
             p="sm"
             fz="xs"
-            icon={<TbMessage size="0.9rem" color={theme.colors.blue[6]} />}
+            icon={<TbMessage size="1.5rem" color={theme.colors.blue[6]} />}
           >
             Your comments
           </Menu.Item>
@@ -93,13 +103,18 @@ export default function AccountSwitcher({ data }: AccountSwitcherProps) {
           <Menu.Label p="sm" fz="xs">
             Settings
           </Menu.Label>
-          <Menu.Item p="sm" fz="xs" icon={<TbSettings size="0.9rem" />}>
+          <Menu.Item p="sm" fz="xs" icon={<TbSettings size="1.5rem" />}>
             Account settings
           </Menu.Item>
-          <Menu.Item p="sm" fz="xs" icon={<TbSwitchHorizontal size="0.9rem" />}>
+          <Menu.Item p="sm" fz="xs" icon={<TbSwitchHorizontal size="1.5rem" />}>
             Change account
           </Menu.Item>
-          <Menu.Item p="sm" fz="xs" icon={<TbLogout size="0.9rem" />}>
+          <Menu.Item
+            onClick={handleLogout}
+            p="sm"
+            fz="xs"
+            icon={<TbLogout size="1.5rem" />}
+          >
             Logout
           </Menu.Item>
 
@@ -108,14 +123,14 @@ export default function AccountSwitcher({ data }: AccountSwitcherProps) {
           <Menu.Label p="sm" fz="xs">
             Danger zone
           </Menu.Label>
-          <Menu.Item p="sm" fz="xs" icon={<TbPlayerPause size="0.9rem" />}>
+          <Menu.Item p="sm" fz="xs" icon={<TbPlayerPause size="1.5rem" />}>
             Pause subscription
           </Menu.Item>
           <Menu.Item
             p="sm"
             fz="xs"
             color="red"
-            icon={<TbTrash size="0.9rem" />}
+            icon={<TbTrash size="1.5rem" />}
           >
             Delete account
           </Menu.Item>

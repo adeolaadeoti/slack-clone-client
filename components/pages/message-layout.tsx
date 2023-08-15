@@ -17,7 +17,7 @@ const Message = dynamic(() => import('../message'), {
   ssr: false,
 })
 
-export default function MessageLayout({ data, appearance }: any) {
+export default function MessageLayout({ data }: any) {
   return (
     <Flex direction="column" justify="space-between" h="100%">
       <Flex
@@ -86,12 +86,10 @@ export default function MessageLayout({ data, appearance }: any) {
                 {' '}
                 #{String(data?.name)?.toLowerCase()}{' '}
               </Text>{' '}
-              channel
+              data
             </Text>
-            {/* {data?.description && data?.description} */}
-            {/* {!data?.description && ( */}
             <Text fz="sm" c={useMantineTheme().colors.dark[2]}>
-              This channel is for everything{' '}
+              This data is for everything{' '}
               <Text span> #{String(data?.name)?.toLowerCase()} </Text> . Hold
               meetings, share docs, and make decisions together with your team.
               &nbsp;
@@ -99,7 +97,6 @@ export default function MessageLayout({ data, appearance }: any) {
                 Edit description
               </UnstyledButton>
             </Text>
-            {/* )} */}
             <UnstyledButton
               mt="lg"
               fz="sm"
@@ -112,7 +109,8 @@ export default function MessageLayout({ data, appearance }: any) {
             </UnstyledButton>
           </Stack>
         </Flex>
-        <Message />
+
+        <Message data={data} />
       </Stack>
     </Flex>
   )

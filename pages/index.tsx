@@ -46,7 +46,7 @@ const Workspaces: NextPage = () => {
     setData(null)
     localStorage.setItem('organisationId', organisation?._id)
     refreshApp()
-    router.push(`/client/${organisation?.channels?.[0]?._id}`)
+    router.push(`/c/${organisation?.channels?.[0]?._id}?channel=true`)
   }
 
   React.useEffect(() => {

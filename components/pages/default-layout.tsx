@@ -16,7 +16,6 @@ import { TbHeadphonesOff, TbHeadphones } from 'react-icons/tb'
 import { HiPlus } from 'react-icons/hi'
 import React from 'react'
 import AccountSwitcher from '../account-switcher'
-import MessageLayout from './message-layout'
 import { useRouter } from 'next/router'
 import { useQuery } from '@tanstack/react-query'
 import axios from '../../services/axios'
@@ -63,29 +62,21 @@ const useStyles = createStyles((theme) => ({
   },
 }))
 
-export default function DefaultLayout({ children, data, channelData }: any) {
+export default function DefaultLayout({
+  children,
+  data,
+  selected,
+  setSelected,
+}: any) {
   const router = useRouter()
-  const { id } = router.query
-
   const { classes } = useStyles()
-  const [selected, setSelected] = React.useState(channelData)
-
-  const query = useQuery(
-    ['channel-layout'],
-    () => axios.get(`/channel/${id}`),
-    {
-      enabled: !!id,
-      onSuccess(data) {
-        setSelected(data?.data?.data)
-      },
-    }
-  )
 
   function handleChannel(channel: any) {
-    router.push(`/client/${channel?._id}`)
+    router.push(`/c/${channel?._id}?channel=true`)
     setSelected(channel)
   }
-  function handleCoworker(data: any) {
+  function handleConversation(data: any) {
+    router.push(`/c/${data?._id}?channel=false`)
     setSelected(data)
   }
 
@@ -137,24 +128,24 @@ export default function DefaultLayout({ children, data, channelData }: any) {
                 </ActionIcon>
               </Tooltip>
             </Group>
-            {data?.coWorkers?.map((coWorker: any, index: any) => (
+            {data?.conversations?.map((convo: any, index: any) => (
               <UnstyledButton
                 w="100%"
-                onClick={() => handleCoworker(coWorker)}
-                key={coWorker._id}
+                onClick={() => handleConversation(convo)}
+                key={convo._id}
                 className={classes.collectionLink}
                 style={{
                   transition: 'all .2s ease',
-                  fontWeight: selected?._id === coWorker._id ? 'bold' : '400',
-                  color: selected?._id === coWorker._id ? 'white' : '#C1C2C5',
+                  fontWeight: selected?._id === convo._id ? 'bold' : '400',
+                  color: selected?._id === convo._id ? 'white' : '#C1C2C5',
                 }}
               >
                 <Avatar size="md" color={getColorByIndex(index)} radius="xl">
-                  {coWorker?.username[0].toUpperCase()}
+                  {convo?.name[0].toUpperCase()}
                 </Avatar>
-                {coWorker.username}{' '}
+                {convo.name}{' '}
                 <Text fw="100" c={useMantineTheme().colors.dark[3]} span>
-                  {coWorker.isLoggedIn ? 'you' : ''}{' '}
+                  {convo.isLoggedIn ? 'you' : ''}{' '}
                 </Text>
               </UnstyledButton>
             ))}
@@ -162,7 +153,7 @@ export default function DefaultLayout({ children, data, channelData }: any) {
 
           <Navbar.Section className={classes.footer}>
             <Text tt="lowercase" size="sm">
-              {selected?.name ?? selected?.username}
+              {selected?.name}
             </Text>
 
             <Switch

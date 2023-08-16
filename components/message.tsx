@@ -130,7 +130,7 @@ const Message = ({ data }: any) => {
         style={{ border: '1.5px solid #404146', borderRadius: '1rem' }}
       >
         <Editor
-          placeholder={`Message #${data?.name.toLowerCase()}`}
+          placeholder={`Message #${data?.name?.toLowerCase()}`}
           editorState={editorState}
           toolbarClassName="toolbarClassName"
           wrapperClassName="wrapperClassName"

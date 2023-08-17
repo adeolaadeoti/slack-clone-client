@@ -1,6 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import axios from '../services/axios'
+import { useRouter } from 'next/router'
+import { AxiosError } from 'axios'
 
 interface Data {
   // Define your data structure here

@@ -12,9 +12,10 @@ export default function Client() {
   const { id } = router.query
   const [selected, setSelected] = React.useState<any>()
   const [channel, setChannel] = React.useState('')
+  const [messages, setMessages] = React.useState<any>([])
 
   const { data } = useAppContext()
-  const query = useQuery(['channel'], () => axios.get(`/channel/${id}`), {
+  const query = useQuery([`channel/${id}`], () => axios.get(`/channel/${id}`), {
     enabled: channel === 'true',
     onSuccess(data) {
       if (channel === 'true') {
@@ -24,7 +25,7 @@ export default function Client() {
     retry: 0,
   })
   const convoQuery = useQuery(
-    ['convo'],
+    [`convo/${id}`],
     () => axios.get(`/conversations/${id}`),
     {
       enabled: channel === 'false',
@@ -37,10 +38,32 @@ export default function Client() {
     }
   )
 
+  const messageQuery = useQuery(
+    [`messages/${id}`],
+    () =>
+      axios.get(`/messages`, {
+        params: {
+          channelId: id,
+        },
+      }),
+    {
+      enabled: !!id,
+      onSuccess(data) {
+        setMessages(data?.data?.data)
+      },
+    }
+  )
+
   React.useEffect(() => {
     if (id) {
-      query.refetch()
-      convoQuery.refetch()
+      messageQuery.refetch()
+
+      if (channel === 'true') {
+        query.refetch()
+      }
+      if (channel === 'false') {
+        convoQuery.refetch()
+      }
       setChannel(localStorage.getItem('channel') as string)
     }
   }, [id])
@@ -49,6 +72,9 @@ export default function Client() {
     <DefaultLayout data={data} selected={selected} setSelected={setSelected}>
       <BackgroundImage h="100vh" src="/bg-chat.png">
         <MessageLayout
+          messages={messages}
+          setMessages={setMessages}
+          refetch={messageQuery.refetch}
           type={channel === 'true' ? 'channel' : 'conversation'}
           data={
             channel === 'true'

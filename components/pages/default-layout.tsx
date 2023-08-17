@@ -19,8 +19,6 @@ import { HiPlus } from 'react-icons/hi'
 import React from 'react'
 import AccountSwitcher from '../account-switcher'
 import { useRouter } from 'next/router'
-import { useQuery } from '@tanstack/react-query'
-import axios from '../../services/axios'
 
 const useStyles = createStyles((theme) => ({
   section: {

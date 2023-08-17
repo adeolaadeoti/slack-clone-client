@@ -14,6 +14,7 @@
     "@mantine/next": "^6.0.17",
     "@mantine/notifications": "^6.0.17",
     "@tanstack/react-query": "^4.32.1",
+    "@types/socket.io-client": "^3.0.0",
     "axios": "^1.4.0",
     "dompurify": "^3.0.5",
     "draft-convert": "^2.1.13",
@@ -24,7 +25,8 @@
     "react": "18.0.0",
     "react-dom": "18.0.0",
     "react-draft-wysiwyg": "^1.15.0",
-    "react-icons": "^4.10.1"
+    "react-icons": "^4.10.1",
+    "socket.io-client": "^4.7.2"
   },
   "devDependencies": {
     "@tanstack/eslint-plugin-query": "^4.32.1",

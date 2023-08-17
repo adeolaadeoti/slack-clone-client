@@ -7,7 +7,13 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AppContextProvider } from '../providers/app-provider'
 
 // Create react query client
-const queryClient = new QueryClient()
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 0,
+    },
+  },
+})
 
 export default function App(props: AppProps) {
   const { Component, pageProps } = props

@@ -20,3 +20,28 @@ export function getColorHexByIndex(index: number) {
   const colorIndex = index % primaryColorsHex.length
   return primaryColorsHex[colorIndex]
 }
+
+interface FormattedDate {
+  time: string
+  timeRender: string
+}
+
+export function formatDate(dateString: string): FormattedDate {
+  const options: Intl.DateTimeFormatOptions = {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: 'numeric',
+    second: 'numeric',
+  }
+
+  const date = new Date(dateString)
+  const formattedTime = new Intl.DateTimeFormat('en-US', options).format(date)
+  const timeParts = formattedTime.split(', ')
+  const timeRender = timeParts[1].replace(/:\d+\s/, ' ')
+
+  return {
+    time: formattedTime.replace(',', ' @ '),
+    timeRender: timeRender,
+  }
+}

@@ -5,7 +5,9 @@ import {
   Paper,
   Stack,
   Text,
+  ThemeIcon,
   Tooltip,
+  UnstyledButton,
   useMantineTheme,
 } from '@mantine/core'
 import { EditorState } from 'draft-js'
@@ -13,14 +15,29 @@ import { Editor } from 'react-draft-wysiwyg'
 import { convertToHTML } from 'draft-convert'
 import DOMPurify from 'dompurify'
 import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css'
-import { getColorByIndex } from '../utils/helpers'
+// import socket from '../services/socket'
+import { useAppContext } from '../providers/app-provider'
+import io from 'socket.io-client'
+import { useQuery } from '@tanstack/react-query'
+import axios from '../services/axios'
+import { BiEditAlt, BiUserPlus } from 'react-icons/bi'
+import { formatDate } from '../utils/helpers'
+// Connect to the WebSocket server
+const socket = io('http://localhost:3000') // Replace with your server URL
 
-const Message = ({ data }: any) => {
+const Message = ({
+  data,
+  messages,
+  setMessages,
+  refetch,
+  isLoading,
+  type,
+}: any) => {
+  const { data: organisationData } = useAppContext()
   const [editorState, setEditorState] = useState(() =>
     EditorState.createEmpty()
   )
-
-  const [messages, setMessages] = useState<any>([])
+  const stackRef = React.useRef<HTMLDivElement | null>(null)
 
   const handleChange = (newEditorState: EditorState) => {
     setEditorState(newEditorState)
@@ -67,25 +84,28 @@ const Message = ({ data }: any) => {
         },
       })(contentState)
 
-      setMessages((msg: any) => [
-        ...msg,
-        {
-          name: data?.name,
-          time: new Date().toLocaleString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            hour: 'numeric',
-            minute: 'numeric',
-            second: 'numeric',
-          }),
-          timeRender: new Date().toLocaleString('en-US', {
-            hour: 'numeric',
-            minute: 'numeric',
-            hour12: true,
-          }),
-          content: htmlContent,
-        },
-      ])
+      const message = {
+        sender: organisationData?.profile?._id,
+        username: organisationData?.profile?.username,
+        time: new Date().toLocaleString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          hour: 'numeric',
+          minute: 'numeric',
+          second: 'numeric',
+        }),
+        timeRender: new Date().toLocaleString('en-US', {
+          hour: 'numeric',
+          minute: 'numeric',
+          hour12: true,
+        }),
+        content: htmlContent,
+      }
+
+      socket.emit('message', {
+        channelId: data?._id,
+        message,
+      })
 
       setEditorState(EditorState.createEmpty())
       returnValue = true
@@ -93,35 +113,201 @@ const Message = ({ data }: any) => {
     return returnValue
   }
 
+  React.useEffect(() => {
+    socket.on('connect', () => {
+      console.log('Connected to the server')
+    })
+    socket.on('message', (data) => {
+      //   refetch()
+      setMessages((prevMessages: any) => [...prevMessages, data.message])
+    })
+
+    return () => {
+      socket.off('message')
+      socket.disconnect()
+    }
+  }, [])
+
+  React.useEffect(() => {
+    if (messages.length > 5) {
+      stackRef.current?.scrollTo(0, stackRef.current.scrollHeight)
+    }
+    // console.log(messages)
+  }, [messages])
+
   return (
     <>
-      <Stack p="lg">
+      <Stack
+        p="lg"
+        ref={stackRef}
+        style={{
+          height: '78vh',
+          overflowY: 'scroll',
+        }}
+      >
+        {!isLoading && (
+          <>
+            <Flex
+              align="start"
+              gap="sm"
+              p="lg"
+              px="0"
+              style={{
+                borderBottom: `1px solid ${useMantineTheme().colors.dark[5]}`,
+              }}
+            >
+              {type === 'channel' && (
+                <ThemeIcon
+                  size="4.25rem"
+                  radius="md"
+                  variant="gradient"
+                  gradient={{ from: '#202020', to: '#414141', deg: 35 }}
+                >
+                  {String(data?.name?.[0])?.toLowerCase()}
+                </ThemeIcon>
+              )}
+              {type === 'conversation' && (
+                <Avatar
+                  src={`/avatars/${data?.name[0].toLowerCase()}.png`}
+                  size="xl"
+                  radius="xl"
+                />
+              )}
+              <Stack spacing=".1rem">
+                {type === 'channel' && (
+                  <>
+                    <Text weight="bold" c="white">
+                      This is the very first begining of the
+                      <Text span c={useMantineTheme().colors.blue[5]}>
+                        {' '}
+                        #{String(data?.name)?.toLowerCase()}{' '}
+                      </Text>{' '}
+                      channel
+                    </Text>
+                    <Text fz="sm" c={useMantineTheme().colors.dark[2]}>
+                      This channel is for everything{' '}
+                      <Text span> #{String(data?.name)?.toLowerCase()} </Text> .
+                      Hold meetings, share docs, and make decisions together
+                      with your team. &nbsp;
+                      <UnstyledButton
+                        fz="sm"
+                        c={useMantineTheme().colors.blue[5]}
+                      >
+                        Edit description
+                      </UnstyledButton>
+                    </Text>
+                    <UnstyledButton
+                      mt="lg"
+                      fz="sm"
+                      c={useMantineTheme().colors.blue[5]}
+                    >
+                      <Flex align="center" justify="start" gap="xs">
+                        <BiUserPlus size="2.2rem" />
+                        <Text>Add people</Text>
+                      </Flex>
+                    </UnstyledButton>
+                  </>
+                )}
+                {type === 'conversation' && (
+                  <>
+                    {data?.isOwner ? (
+                      <>
+                        <Text weight="bold" c="white">
+                          This space is just for you.
+                        </Text>
+                        <Text fz="sm" c={useMantineTheme().colors.dark[2]}>
+                          Jot down notes, list your to-dos, or keep links and
+                          files handy. You can also talk to yourself here, but
+                          please bear in mind you’ll have to supply both sides
+                          of the conversation. &nbsp;
+                        </Text>
+                        <UnstyledButton
+                          mt="lg"
+                          fz="sm"
+                          c={useMantineTheme().colors.blue[5]}
+                        >
+                          <Flex align="center" justify="start" gap="xs">
+                            <BiEditAlt size="2rem" />
+                            <Text>Edit profile</Text>
+                          </Flex>
+                        </UnstyledButton>
+                      </>
+                    ) : (
+                      <>
+                        <Text weight="bold" c="white">
+                          This conversation is just between
+                          <Text span c={useMantineTheme().colors.blue[5]}>
+                            {' '}
+                            @{String(data?.name)?.toLowerCase()}{' '}
+                          </Text>{' '}
+                          and you.
+                        </Text>
+                        <Text fz="sm" c={useMantineTheme().colors.dark[2]}>
+                          Hold meetings, share docs, and make decisions together
+                          with your team. &nbsp;
+                          <UnstyledButton
+                            fz="sm"
+                            c={useMantineTheme().colors.blue[5]}
+                          >
+                            Edit description
+                          </UnstyledButton>
+                        </Text>
+                        <UnstyledButton
+                          mt="lg"
+                          fz="sm"
+                          c={useMantineTheme().colors.blue[5]}
+                        >
+                          <Flex align="center" justify="start" gap="xs">
+                            <BiUserPlus size="2.2rem" />
+                            <Text>Add people</Text>
+                          </Flex>
+                        </UnstyledButton>
+                      </>
+                    )}
+                  </>
+                )}
+              </Stack>
+            </Flex>
+          </>
+        )}
+
         {messages?.map((msg: any) => (
           <Flex gap="sm" align="center">
-            <Avatar
-              src={`/avatars/${msg?.name[0].toLowerCase()}.png`}
-              size="xl"
-              radius="xl"
-            />
+            {msg?.username ? (
+              <Avatar
+                src={`/avatars/${msg?.username?.[0].toLowerCase()}.png`}
+                size="xl"
+                radius="xl"
+              />
+            ) : (
+              <Avatar
+                src={`/avatars/${msg?.sender?.username?.[0].toLowerCase()}.png`}
+                size="xl"
+                radius="xl"
+              />
+            )}
             <Flex direction="column">
-              <Flex align="item" gap="md">
+              <Flex align="center" gap="md">
                 <Text
                   fz="sm"
                   fw="bold"
                   c={useMantineTheme().colors.dark[2]}
                   span
                 >
-                  {msg.name}
+                  {msg?.sender?.username ?? msg?.username}
                 </Text>
-                <Tooltip label={msg.time} withArrow position="right">
+                <Tooltip
+                  label={msg.time ?? formatDate(msg?.createdAt).time}
+                  withArrow
+                  position="right"
+                >
                   <Text
                     fz="xs"
-                    fw="medium"
                     tt="lowercase"
                     c={useMantineTheme().colors.dark[3]}
                     span
                   >
-                    {msg.timeRender}
+                    {msg.timeRender ?? formatDate(msg?.createdAt).timeRender}
                   </Text>
                 </Tooltip>
               </Flex>

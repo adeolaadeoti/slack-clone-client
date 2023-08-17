@@ -10,6 +10,8 @@ import {
   Switch,
   UnstyledButton,
   useMantineTheme,
+  Stack,
+  Skeleton,
 } from '@mantine/core'
 import { getColorByIndex } from '../../utils/helpers'
 import { TbHeadphonesOff, TbHeadphones } from 'react-icons/tb'
@@ -72,11 +74,13 @@ export default function DefaultLayout({
   const { classes } = useStyles()
 
   function handleChannel(channel: any) {
-    router.push(`/c/${channel?._id}?channel=true`)
+    router.push(`/c/${channel?._id}`)
+    localStorage.setItem('channel', 'true')
     setSelected(channel)
   }
   function handleConversation(data: any) {
-    router.push(`/c/${data?._id}?channel=false`)
+    router.push(`/c/${data?._id}`)
+    localStorage.setItem('channel', 'false')
     setSelected(data)
   }
 
@@ -99,6 +103,13 @@ export default function DefaultLayout({
                 </ActionIcon>
               </Tooltip>
             </Group>
+
+            {!data?.channels && (
+              <Stack spacing="sm">
+                <Skeleton height={15} width={250} radius="md" />
+                <Skeleton height={15} width={150} radius="md" />
+              </Stack>
+            )}
 
             {data?.channels?.map((channel: any) => (
               <UnstyledButton
@@ -128,6 +139,12 @@ export default function DefaultLayout({
                 </ActionIcon>
               </Tooltip>
             </Group>
+            {!data?.conversations && (
+              <Stack spacing="sm">
+                <Skeleton height={15} width={250} radius="md" />
+                <Skeleton height={15} width={150} radius="md" />
+              </Stack>
+            )}
             {data?.conversations?.map((convo: any, index: any) => (
               <UnstyledButton
                 w="100%"
@@ -140,8 +157,13 @@ export default function DefaultLayout({
                   color: selected?._id === convo._id ? 'white' : '#C1C2C5',
                 }}
               >
-                <Avatar size="md" color={getColorByIndex(index)} radius="xl">
-                  {convo?.name[0].toUpperCase()}
+                <Avatar
+                  src={`/avatars/${convo?.name[0].toLowerCase()}.png`}
+                  size="md"
+                  color={getColorByIndex(index)}
+                  radius="xl"
+                >
+                  {convo?.name[0].toLowerCase()}
                 </Avatar>
                 {convo.name}{' '}
                 <Text fw="100" c={useMantineTheme().colors.dark[3]} span>
@@ -152,10 +174,14 @@ export default function DefaultLayout({
           </Navbar.Section>
 
           <Navbar.Section className={classes.footer}>
-            <Text tt="lowercase" size="sm">
-              {selected?.name}
-            </Text>
-
+            {!selected?.name && (
+              <Skeleton height={15} width={150} radius="md" />
+            )}
+            {selected?.name && (
+              <Text tt="lowercase" size="sm">
+                {selected?.name}
+              </Text>
+            )}
             <Switch
               size="xl"
               color={useMantineTheme().colorScheme === 'dark' ? 'gray' : 'dark'}

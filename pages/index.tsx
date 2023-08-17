@@ -1,4 +1,12 @@
-import { Avatar, Center, Flex, Paper, Stack, Text } from '@mantine/core'
+import {
+  Avatar,
+  Center,
+  Flex,
+  Paper,
+  Skeleton,
+  Stack,
+  Text,
+} from '@mantine/core'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { NextPage } from 'next'
 import axios from '../services/axios'
@@ -46,7 +54,8 @@ const Workspaces: NextPage = () => {
     setData(null)
     localStorage.setItem('organisationId', organisation?._id)
     refreshApp()
-    router.push(`/c/${organisation?.channels?.[0]?._id}?channel=true`)
+    router.push(`/c/${organisation?.channels?.[0]?._id}`)
+    localStorage.setItem('channel', 'true')
   }
 
   React.useEffect(() => {
@@ -61,7 +70,7 @@ const Workspaces: NextPage = () => {
   }, [])
 
   return (
-    <Center p="xl" h="100vh" w="100vw" bg="#111317">
+    <Center p="xl" h="100vh" w="100vw">
       <Stack spacing="10rem">
         <Center>
           <SlackLogo />
@@ -93,6 +102,15 @@ const Workspaces: NextPage = () => {
           </Flex>
         </Flex>
         <Paper radius="lg" p="2xl" withBorder mt="xl" w="50%" mx="auto">
+          {query.isLoading && (
+            <Flex align="center" gap="sm">
+              <Skeleton circle height={60} />
+              <Stack spacing="xs">
+                <Skeleton height={24} width={550} radius="lg" />
+                <Skeleton height={24} width={250} radius="lg" />
+              </Stack>
+            </Flex>
+          )}
           {organisations?.length >= 1 && (
             <Text fw="bold" c="white" mb="xl">
               Open a workspace

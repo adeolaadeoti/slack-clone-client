@@ -5,11 +5,13 @@ import MessageLayout from '../../components/pages/message-layout'
 import { useQuery } from '@tanstack/react-query'
 import axios from '../../services/axios'
 import { useAppContext } from '../../providers/app-provider'
+import { BackgroundImage } from '@mantine/core'
 
 export default function Client() {
   const router = useRouter()
-  const { id, channel } = router.query
+  const { id } = router.query
   const [selected, setSelected] = React.useState<any>()
+  const [channel, setChannel] = React.useState('')
 
   const { data } = useAppContext()
   const query = useQuery(['channel'], () => axios.get(`/channel/${id}`), {
@@ -19,7 +21,7 @@ export default function Client() {
         setSelected(data?.data?.data)
       }
     },
-    retry: 1,
+    retry: 0,
   })
   const convoQuery = useQuery(
     ['convo'],
@@ -31,10 +33,7 @@ export default function Client() {
           setSelected(data?.data?.data)
         }
       },
-      // refetchOnWindowFocus: false,
-      // refetchOnReconnect: false,
-      retry: 1,
-      // retryDelay: 3000,
+      retry: 0,
     }
   )
 
@@ -42,19 +41,22 @@ export default function Client() {
     if (id) {
       query.refetch()
       convoQuery.refetch()
+      setChannel(localStorage.getItem('channel') as string)
     }
   }, [id])
 
   return (
     <DefaultLayout data={data} selected={selected} setSelected={setSelected}>
-      <MessageLayout
-        type={channel === 'true' ? 'channel' : 'conversation'}
-        data={
-          channel === 'true'
-            ? query?.data?.data?.data
-            : convoQuery?.data?.data?.data
-        }
-      />
+      <BackgroundImage h="100vh" src="/bg-chat.png">
+        <MessageLayout
+          type={channel === 'true' ? 'channel' : 'conversation'}
+          data={
+            channel === 'true'
+              ? query?.data?.data?.data
+              : convoQuery?.data?.data?.data
+          }
+        />
+      </BackgroundImage>
     </DefaultLayout>
   )
 }

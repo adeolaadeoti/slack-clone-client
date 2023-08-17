@@ -5,6 +5,7 @@ import {
   Paper,
   Stack,
   Text,
+  Tooltip,
   useMantineTheme,
 } from '@mantine/core'
 import { EditorState } from 'draft-js'
@@ -15,21 +16,11 @@ import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css'
 import { getColorByIndex } from '../utils/helpers'
 
 const Message = ({ data }: any) => {
-  const [messageData, setMessageData] = React.useState<any>()
-
   const [editorState, setEditorState] = useState(() =>
     EditorState.createEmpty()
   )
 
-  const [messages, setMessages] = useState([
-    {
-      profileImage: 'a',
-      name: 'adeola.adeoti',
-      time: 'Aug 1st at 2:21:45 AM',
-      timeRender: '2:21 AM',
-      content: `<p>joined. Also, mumu and 2 others joined.</p>`,
-    },
-  ])
+  const [messages, setMessages] = useState<any>([])
 
   const handleChange = (newEditorState: EditorState) => {
     setEditorState(newEditorState)
@@ -76,44 +67,66 @@ const Message = ({ data }: any) => {
         },
       })(contentState)
 
-      setMessages((msg) => [
+      setMessages((msg: any) => [
         ...msg,
         {
-          profileImage: 'a',
-          name: 'adeola.adeoti',
-          time: 'Aug 1st at 2:21:45 AM',
-          timeRender: '2:21 AM',
+          name: data?.name,
+          time: new Date().toLocaleString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: 'numeric',
+            second: 'numeric',
+          }),
+          timeRender: new Date().toLocaleString('en-US', {
+            hour: 'numeric',
+            minute: 'numeric',
+            hour12: true,
+          }),
           content: htmlContent,
         },
       ])
+
       setEditorState(EditorState.createEmpty())
       returnValue = true
     }
     return returnValue
   }
 
-  React.useEffect(() => {
-    setMessageData(data)
-  }, [data])
-
   return (
     <>
       <Stack p="lg">
-        {messages?.map((msg, index) => (
-          <Flex>
-            <Avatar size="md" color={getColorByIndex(index)} radius="xl">
-              {msg.profileImage}
-            </Avatar>
+        {messages?.map((msg: any) => (
+          <Flex gap="sm" align="center">
+            <Avatar
+              src={`/avatars/${msg?.name[0].toLowerCase()}.png`}
+              size="xl"
+              radius="xl"
+            />
             <Flex direction="column">
               <Flex align="item" gap="md">
-                <Text fw="100" c={useMantineTheme().colors.dark[3]} span>
+                <Text
+                  fz="sm"
+                  fw="bold"
+                  c={useMantineTheme().colors.dark[2]}
+                  span
+                >
                   {msg.name}
                 </Text>
-                <Text fw="100" c={useMantineTheme().colors.dark[3]} span>
-                  {msg.timeRender}
-                </Text>
+                <Tooltip label={msg.time} withArrow position="right">
+                  <Text
+                    fz="xs"
+                    fw="medium"
+                    tt="lowercase"
+                    c={useMantineTheme().colors.dark[3]}
+                    span
+                  >
+                    {msg.timeRender}
+                  </Text>
+                </Tooltip>
               </Flex>
               <div
+                className="chat-wrapper"
                 dangerouslySetInnerHTML={{
                   __html: DOMPurify.sanitize(msg.content), // Sanitize and render HTML
                 }}

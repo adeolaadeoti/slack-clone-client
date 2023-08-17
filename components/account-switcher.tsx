@@ -7,6 +7,9 @@ import {
   Text,
   Menu,
   ThemeIcon,
+  Flex,
+  Skeleton,
+  Stack,
 } from '@mantine/core'
 import {
   TbLogout,
@@ -48,6 +51,7 @@ export default function AccountSwitcher({ data }: AccountSwitcherProps) {
     localStorage.removeItem('organisationId')
     localStorage.removeItem('signUpEmail')
     localStorage.removeItem('access-token')
+    localStorage.removeItem('channel')
     router.push('/signin')
   }
 
@@ -62,19 +66,29 @@ export default function AccountSwitcher({ data }: AccountSwitcherProps) {
         withinPortal
       >
         <Menu.Target>
-          <UnstyledButton className={cx(classes.user)}>
-            <Group spacing={7}>
-              <ThemeIcon size="3rem" radius="md" variant="gradient">
-                <Text weight="bold" size="sm">
-                  {data?.name[0].toUpperCase()}
+          {!data?.name ? (
+            <Flex align="center" gap="sm">
+              <Skeleton circle height={61} />
+              <Stack spacing="sm">
+                <Skeleton height={15} width={250} radius="md" />
+                <Skeleton height={15} width={150} radius="md" />
+              </Stack>
+            </Flex>
+          ) : (
+            <UnstyledButton className={cx(classes.user)}>
+              <Group spacing={7}>
+                <ThemeIcon size="3rem" radius="md" variant="gradient">
+                  <Text weight="bold" size="sm">
+                    {data?.name[0].toUpperCase()}
+                  </Text>
+                </ThemeIcon>
+                <Text weight="bold" size="sm" pl="sm" mr="md">
+                  {data?.name}
                 </Text>
-              </ThemeIcon>
-              <Text weight="bold" size="sm" pl="sm" mr="md">
-                {data?.name}
-              </Text>
-              <LuChevronsUpDown size="1.4rem" />
-            </Group>
-          </UnstyledButton>
+                <LuChevronsUpDown size="1.4rem" />
+              </Group>
+            </UnstyledButton>
+          )}
         </Menu.Target>
         <Menu.Dropdown>
           <Menu.Item

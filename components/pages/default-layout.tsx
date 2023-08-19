@@ -19,6 +19,8 @@ import { HiPlus } from 'react-icons/hi'
 import React from 'react'
 import AccountSwitcher from '../account-switcher'
 import { useRouter } from 'next/router'
+import { useQuery } from '@tanstack/react-query'
+import axios from '../../services/axios'
 
 const useStyles = createStyles((theme) => ({
   section: {
@@ -67,6 +69,7 @@ export default function DefaultLayout({
   data,
   selected,
   setSelected,
+  setMessages,
 }: any) {
   const router = useRouter()
   const { classes } = useStyles()
@@ -75,11 +78,13 @@ export default function DefaultLayout({
     router.push(`/c/${channel?._id}`)
     localStorage.setItem('channel', 'true')
     setSelected(channel)
+    setMessages([])
   }
   function handleConversation(data: any) {
     router.push(`/c/${data?._id}`)
     localStorage.setItem('channel', 'false')
     setSelected(data)
+    setMessages([])
   }
 
   return (

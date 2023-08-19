@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react'
 import axios from '../services/axios'
 import { useRouter } from 'next/router'
 import { AxiosError } from 'axios'
+import { LoadingOverlay } from '@mantine/core'
 
 interface Data {
   // Define your data structure here
@@ -34,6 +35,8 @@ export const AppContextProvider = ({ children }: any) => {
       },
     }
   )
+
+  if (query.isLoading) return <LoadingOverlay visible />
 
   return (
     <AppContext.Provider

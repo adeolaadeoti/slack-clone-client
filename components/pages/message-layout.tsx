@@ -3,16 +3,13 @@ import {
   Flex,
   Paper,
   Skeleton,
-  Stack,
   Text,
   ThemeIcon,
-  UnstyledButton,
   useMantineTheme,
 } from '@mantine/core'
 import React from 'react'
 import { getColorHexByIndex } from '../../utils/helpers'
 import { LuUserPlus } from 'react-icons/lu'
-import { BiEditAlt, BiUserPlus } from 'react-icons/bi'
 import dynamic from 'next/dynamic'
 const Message = dynamic(() => import('../message'), {
   ssr: false,
@@ -22,7 +19,6 @@ export default function MessageLayout({
   data,
   type,
   messages,
-  refetch,
   setMessages,
 }: any) {
   const isLoading = !data?.name
@@ -99,7 +95,6 @@ export default function MessageLayout({
         isLoading={isLoading}
         type={type}
         messages={messages}
-        refetch={refetch}
         setMessages={setMessages}
         data={data}
       />

@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import {
   Avatar,
+  Box,
   Flex,
   Paper,
   Stack,
@@ -15,24 +16,14 @@ import { Editor } from 'react-draft-wysiwyg'
 import { convertToHTML } from 'draft-convert'
 import DOMPurify from 'dompurify'
 import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css'
-// import socket from '../services/socket'
 import { useAppContext } from '../providers/app-provider'
 import io from 'socket.io-client'
-import { useQuery } from '@tanstack/react-query'
-import axios from '../services/axios'
 import { BiEditAlt, BiUserPlus } from 'react-icons/bi'
 import { formatDate } from '../utils/helpers'
 // Connect to the WebSocket server
-const socket = io('http://localhost:3000') // Replace with your server URL
+const socket = io('http://localhost:3000')
 
-const Message = ({
-  data,
-  messages,
-  setMessages,
-  refetch,
-  isLoading,
-  type,
-}: any) => {
+const Message = ({ data, messages, setMessages, isLoading, type }: any) => {
   const { data: organisationData } = useAppContext()
   const [editorState, setEditorState] = useState(() =>
     EditorState.createEmpty()
@@ -51,64 +42,64 @@ const Message = ({
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
       const contentState = editorState.getCurrentContent()
+      const hasText = contentState.getPlainText().trim()
 
-      const htmlContent = convertToHTML({
-        styleToHTML: (style) => {
-          if (style === 'BOLD') {
-            return <strong />
-          }
-          if (style === 'ITALIC') {
-            return <em />
-          }
-        },
-        blockToHTML: (block) => {
-          if (block.type === 'unstyled') {
-            return <p />
-          }
-        },
-        entityToHTML: (entity, originalText) => {
-          if (entity.type === 'LINK') {
-            const { url } = entity.data
-            console.log(
-              <a href={url} target="_blank">
-                {originalText}
-              </a>
-            )
-            return (
-              <a href={url} target="_blank">
-                {originalText}
-              </a>
-            )
-          }
-          return originalText
-        },
-      })(contentState)
+      if (hasText) {
+        const htmlContent = convertToHTML({
+          entityToHTML: (entity, originalText) => {
+            if (entity.type === 'LINK') {
+              const { url } = entity.data
+              return (
+                <a target="_blank" href={url}>
+                  {originalText}
+                </a>
+              )
+            }
 
-      const message = {
-        sender: organisationData?.profile?._id,
-        username: organisationData?.profile?.username,
-        time: new Date().toLocaleString('en-US', {
-          month: 'short',
-          day: 'numeric',
-          hour: 'numeric',
-          minute: 'numeric',
-          second: 'numeric',
-        }),
-        timeRender: new Date().toLocaleString('en-US', {
-          hour: 'numeric',
-          minute: 'numeric',
-          hour12: true,
-        }),
-        content: htmlContent,
+            return originalText
+          },
+        })(contentState)
+
+        const message = {
+          sender: organisationData?.profile?._id,
+          username: organisationData?.profile?.username,
+          time: new Date().toLocaleString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: 'numeric',
+            second: 'numeric',
+          }),
+          timeRender: new Date().toLocaleString('en-US', {
+            hour: 'numeric',
+            minute: 'numeric',
+            hour12: true,
+          }),
+          content: htmlContent,
+        }
+
+        socket.emit('message', {
+          ...(type === 'channel' && { channelId: data?._id }),
+          ...(type === 'conversation' && {
+            conversationId: data?._id,
+            collaborators: [
+              data?.collaborators[0]?._id,
+              organisationData?.profile?._id,
+            ],
+            isSelf:
+              data?.collaborators[0]?._id === organisationData?.profile?._id,
+          }),
+          message,
+        })
+
+        // console.log({
+        //   conversationId: data?.collaborators[0]?._id,
+        //   userId: organisationData?.profile?._id,
+        // })
+
+        setEditorState(EditorState.createEmpty())
+        returnValue = true
       }
-
-      socket.emit('message', {
-        channelId: data?._id,
-        message,
-      })
-
-      setEditorState(EditorState.createEmpty())
-      returnValue = true
     }
     return returnValue
   }
@@ -117,9 +108,9 @@ const Message = ({
     socket.on('connect', () => {
       console.log('Connected to the server')
     })
-    socket.on('message', (data) => {
-      //   refetch()
-      setMessages((prevMessages: any) => [...prevMessages, data.message])
+
+    socket.on('message', (message) => {
+      setMessages((prevMessages: any) => [...prevMessages, message])
     })
 
     return () => {
@@ -132,7 +123,6 @@ const Message = ({
     if (messages.length > 5) {
       stackRef.current?.scrollTo(0, stackRef.current.scrollHeight)
     }
-    // console.log(messages)
   }, [messages])
 
   return (
@@ -270,7 +260,6 @@ const Message = ({
             </Flex>
           </>
         )}
-
         {messages?.map((msg: any) => (
           <Flex gap="sm" align="center">
             {msg?.username ? (
@@ -314,7 +303,9 @@ const Message = ({
               <div
                 className="chat-wrapper"
                 dangerouslySetInnerHTML={{
-                  __html: DOMPurify.sanitize(msg.content), // Sanitize and render HTML
+                  __html: DOMPurify.sanitize(msg.content, {
+                    ADD_ATTR: ['target'],
+                  }),
                 }}
               />
             </Flex>
@@ -326,7 +317,13 @@ const Message = ({
         radius="md"
         mt="xs"
         m="lg"
-        style={{ border: '1.5px solid #404146', borderRadius: '1rem' }}
+        style={{
+          border: '1.5px solid #404146',
+          borderRadius: '1rem',
+          position: 'absolute',
+          bottom: 5,
+          width: '81%',
+        }}
       >
         <Editor
           placeholder={`Message #${data?.name?.toLowerCase()}`}
@@ -345,6 +342,7 @@ const Message = ({
             },
             link: {
               className: 'inline-style',
+              defaultTargetOption: '_blank',
               showOpenOptionOnHover: true,
               options: ['link', 'unlink'],
               linkCallback: undefined,

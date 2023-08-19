@@ -143,6 +143,7 @@ const Workspaces: NextPage = () => {
                 <Flex
                   pb="md"
                   align="center"
+                  key={organisation?._id}
                   style={{
                     borderBottom:
                       organisations.length - 1 === index

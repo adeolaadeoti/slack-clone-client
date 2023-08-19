@@ -20,11 +20,16 @@ import { useAppContext } from '../providers/app-provider'
 import io from 'socket.io-client'
 import { BiEditAlt, BiUserPlus } from 'react-icons/bi'
 import { formatDate } from '../utils/helpers'
+import { notifications } from '@mantine/notifications'
 // Connect to the WebSocket server
 const socket = io('http://localhost:3000')
 
 const Message = ({ data, messages, setMessages, isLoading, type }: any) => {
   const { data: organisationData } = useAppContext()
+  // const channel = data
+  const channelCollaborators = data?.collaborators?.map((d: any) => d._id)
+  const userId = organisationData?.profile?._id
+
   const [editorState, setEditorState] = useState(() =>
     EditorState.createEmpty()
   )
@@ -61,7 +66,7 @@ const Message = ({ data, messages, setMessages, isLoading, type }: any) => {
         })(contentState)
 
         const message = {
-          sender: organisationData?.profile?._id,
+          sender: userId,
           username: organisationData?.profile?.username,
           time: new Date().toLocaleString('en-US', {
             month: 'short',
@@ -76,26 +81,21 @@ const Message = ({ data, messages, setMessages, isLoading, type }: any) => {
             hour12: true,
           }),
           content: htmlContent,
+          name: organisationData?.profile?.username,
         }
 
         socket.emit('message', {
-          ...(type === 'channel' && { channelId: data?._id }),
+          message,
+          ...(type === 'channel' && {
+            channelId: data?._id,
+            channelName: data?.name,
+          }),
           ...(type === 'conversation' && {
             conversationId: data?._id,
-            collaborators: [
-              data?.collaborators[0]?._id,
-              organisationData?.profile?._id,
-            ],
-            isSelf:
-              data?.collaborators[0]?._id === organisationData?.profile?._id,
+            collaborators: [data?.collaborators[0]?._id, userId],
+            isSelf: data?.collaborators[0]?._id === userId,
           }),
-          message,
         })
-
-        // console.log({
-        //   conversationId: data?.collaborators[0]?._id,
-        //   userId: organisationData?.profile?._id,
-        // })
 
         setEditorState(EditorState.createEmpty())
         returnValue = true
@@ -109,12 +109,46 @@ const Message = ({ data, messages, setMessages, isLoading, type }: any) => {
       console.log('Connected to the server')
     })
 
-    socket.on('message', (message) => {
-      setMessages((prevMessages: any) => [...prevMessages, message])
+    socket.on('message', (data) => {
+      if (data?.collaborators?.includes(userId)) {
+        setMessages((prevMessages: any) => [...prevMessages, data?.message])
+      }
+      // else if (channelCollaborators?.includes(userId)) {
+      setMessages((prevMessages: any) => [...prevMessages, data?.message])
+      // }
+    })
+
+    socket.on('notification', (data) => {
+      const sanitizedContent = DOMPurify.sanitize(data?.message?.content, {
+        ALLOWED_TAGS: [],
+      })
+      const maxLength = 28
+      const truncatedContent =
+        sanitizedContent.length > maxLength
+          ? sanitizedContent.slice(0, maxLength) + '...'
+          : sanitizedContent
+      if (data?.collaborators?.includes(userId)) {
+        notifications.show({
+          title: data?.message?.username,
+          message: truncatedContent,
+          color: 'green',
+          p: 'md',
+        })
+      } else if (channelCollaborators?.includes(userId)) {
+        notifications.show({
+          title: `${
+            data?.message?.username
+          } #${data?.channelName?.toLowerCase()}`,
+          message: truncatedContent,
+          color: 'green',
+          p: 'md',
+        })
+      }
     })
 
     return () => {
       socket.off('message')
+      socket.off('notification')
       socket.disconnect()
     }
   }, [])
@@ -261,7 +295,7 @@ const Message = ({ data, messages, setMessages, isLoading, type }: any) => {
           </>
         )}
         {messages?.map((msg: any) => (
-          <Flex gap="sm" align="center">
+          <Flex gap="sm" align="center" key={msg?._id}>
             {msg?.username ? (
               <Avatar
                 src={`/avatars/${msg?.username?.[0].toLowerCase()}.png`}
@@ -286,7 +320,7 @@ const Message = ({ data, messages, setMessages, isLoading, type }: any) => {
                   {msg?.sender?.username ?? msg?.username}
                 </Text>
                 <Tooltip
-                  label={msg.time ?? formatDate(msg?.createdAt).time}
+                  label={msg?.time ?? formatDate(msg?.createdAt).time}
                   withArrow
                   position="right"
                 >
@@ -296,7 +330,7 @@ const Message = ({ data, messages, setMessages, isLoading, type }: any) => {
                     c={useMantineTheme().colors.dark[3]}
                     span
                   >
-                    {msg.timeRender ?? formatDate(msg?.createdAt).timeRender}
+                    {msg?.timeRender ?? formatDate(msg?.createdAt).timeRender}
                   </Text>
                 </Tooltip>
               </Flex>
@@ -313,47 +347,96 @@ const Message = ({ data, messages, setMessages, isLoading, type }: any) => {
         ))}
       </Stack>
 
-      <Paper
-        radius="md"
-        mt="xs"
-        m="lg"
-        style={{
-          border: '1.5px solid #404146',
-          borderRadius: '1rem',
-          position: 'absolute',
-          bottom: 5,
-          width: '81%',
-        }}
-      >
-        <Editor
-          placeholder={`Message #${data?.name?.toLowerCase()}`}
-          editorState={editorState}
-          toolbarClassName="toolbarClassName"
-          wrapperClassName="wrapperClassName"
-          editorClassName="editorClassName"
-          onEditorStateChange={handleChange}
-          handleReturn={handleReturn}
-          toolbar={{
-            options: ['inline', 'link', 'list', 'emoji'],
-            inline: {
-              options: ['bold', 'italic', 'strikethrough'],
-              className: 'inline-style',
-              bold: { icon: '/bold.svg' },
-            },
-            link: {
-              className: 'inline-style',
-              defaultTargetOption: '_blank',
-              showOpenOptionOnHover: true,
-              options: ['link', 'unlink'],
-              linkCallback: undefined,
-            },
-            list: {
-              options: ['unordered', 'ordered'],
-              className: 'inline-style',
-            },
+      {!data?.isChannel && (
+        <Paper
+          radius="md"
+          mt="xs"
+          m="lg"
+          style={{
+            border: '1.5px solid #404146',
+            borderRadius: '1rem',
+            position: 'absolute',
+            bottom: 5,
+            width: '81%',
           }}
-        />
-      </Paper>
+        >
+          <Editor
+            placeholder={`Message #${data?.name?.toLowerCase()}`}
+            editorState={editorState}
+            toolbarClassName="toolbarClassName"
+            wrapperClassName="wrapperClassName"
+            editorClassName="editorClassName"
+            onEditorStateChange={handleChange}
+            handleReturn={handleReturn}
+            toolbar={{
+              options: ['inline', 'link', 'list', 'emoji'],
+              inline: {
+                options: ['bold', 'italic', 'strikethrough'],
+                className: 'inline-style',
+                bold: { icon: '/bold.svg' },
+              },
+              link: {
+                className: 'inline-style',
+                defaultTargetOption: '_blank',
+                showOpenOptionOnHover: true,
+                options: ['link', 'unlink'],
+                linkCallback: undefined,
+              },
+              list: {
+                options: ['unordered', 'ordered'],
+                className: 'inline-style',
+              },
+            }}
+          />
+        </Paper>
+      )}
+
+      {channelCollaborators?.includes(userId) && (
+        <Paper
+          radius="md"
+          mt="xs"
+          m="lg"
+          style={{
+            border: '1.5px solid #404146',
+            borderRadius: '1rem',
+            position: 'absolute',
+            bottom: 5,
+            width: '81%',
+          }}
+        >
+          <Editor
+            placeholder={`Message #${data?.name?.toLowerCase()}`}
+            editorState={editorState}
+            toolbarClassName="toolbarClassName"
+            wrapperClassName="wrapperClassName"
+            editorClassName="editorClassName"
+            onEditorStateChange={handleChange}
+            handleReturn={handleReturn}
+            toolbar={{
+              options: ['inline', 'link', 'list', 'emoji'],
+              inline: {
+                options: ['bold', 'italic', 'strikethrough'],
+                className: 'inline-style',
+                bold: { icon: '/bold.svg' },
+              },
+              link: {
+                className: 'inline-style',
+                defaultTargetOption: '_blank',
+                showOpenOptionOnHover: true,
+                options: ['link', 'unlink'],
+                linkCallback: undefined,
+              },
+              list: {
+                options: ['unordered', 'ordered'],
+                className: 'inline-style',
+              },
+            }}
+          />
+        </Paper>
+      )}
+      {data?.isChannel && !channelCollaborators?.includes(userId) && (
+        <Text>Join Channel</Text>
+      )}
     </>
   )
 }

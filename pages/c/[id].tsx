@@ -51,11 +51,6 @@ export default function Client() {
                   organisationData?.profile?._id,
               },
             })
-            // console.log([
-            //   data?.data?.data?.collaborators[0]?._id,
-            //   organisationData?.profile?._id,
-            // ])
-            // console.log(res?.data?.data)
             setMessages(res?.data?.data)
           } catch (error) {
             console.log(error)

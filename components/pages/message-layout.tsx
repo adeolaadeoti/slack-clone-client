@@ -91,13 +91,15 @@ export default function MessageLayout({
         )}
       </Flex>
 
-      <Message
-        isLoading={isLoading}
-        type={type}
-        messages={messages}
-        setMessages={setMessages}
-        data={data}
-      />
+      {data && (
+        <Message
+          isLoading={isLoading}
+          type={type}
+          messages={messages}
+          setMessages={setMessages}
+          data={data}
+        />
+      )}
     </Flex>
   )
 }

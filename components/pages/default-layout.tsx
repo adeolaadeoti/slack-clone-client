@@ -19,8 +19,9 @@ import { HiPlus } from 'react-icons/hi'
 import React from 'react'
 import AccountSwitcher from '../account-switcher'
 import { useRouter } from 'next/router'
-import { useQuery } from '@tanstack/react-query'
-import axios from '../../services/axios'
+// import { io } from 'socket.io-client'
+
+// const socket = io('http://localhost:3000')
 
 const useStyles = createStyles((theme) => ({
   section: {
@@ -87,6 +88,12 @@ export default function DefaultLayout({
     setMessages([])
   }
 
+  // React.useEffect(() => {
+  //   socket.on('notification', (data) => {
+  //     console.log(data)
+  //   })
+  // }, [])
+
   return (
     <Grid h="100vh" m="0">
       <Grid.Col span={2} p="0">
@@ -95,8 +102,8 @@ export default function DefaultLayout({
             <AccountSwitcher data={data} />
           </Navbar.Section>
 
-          <Navbar.Section className={classes.section}>
-            <Group align="center" position="apart">
+          <Navbar.Section className={classes.section} px="0" mx="sm">
+            <Group pl="sm" align="center" position="apart">
               <Text size="xs" mb="sm" color="dimmed">
                 Channels
               </Text>
@@ -117,12 +124,19 @@ export default function DefaultLayout({
             {data?.channels?.map((channel: any) => (
               <UnstyledButton
                 w="100%"
+                px="sm"
                 onClick={() => handleChannel(channel)}
                 key={channel._id}
                 className={classes.collectionLink}
                 style={{
                   transition: 'all .2s ease',
-                  fontWeight: selected?._id === channel._id ? 'bold' : '400',
+                  borderRadius: 10,
+
+                  // fontWeight: selected?._id === channel._id ? 'bold' : '400',
+                  backgroundColor:
+                    selected?._id === channel._id
+                      ? useMantineTheme().colors.dark[6]
+                      : 'transparent',
                   color: selected?._id === channel._id ? 'white' : '#C1C2C5',
                 }}
               >
@@ -131,8 +145,8 @@ export default function DefaultLayout({
             ))}
           </Navbar.Section>
 
-          <Navbar.Section className={classes.section}>
-            <Group align="center" position="apart">
+          <Navbar.Section className={classes.section} px="0" mx="sm">
+            <Group pl="sm" align="center" position="apart">
               <Text size="xs" weight="bold" mb="sm" color="dimmed">
                 Direct messages
               </Text>
@@ -151,12 +165,19 @@ export default function DefaultLayout({
             {data?.conversations?.map((convo: any, index: any) => (
               <UnstyledButton
                 w="100%"
+                px="sm"
                 onClick={() => handleConversation(convo)}
                 key={convo._id}
                 className={classes.collectionLink}
                 style={{
                   transition: 'all .2s ease',
-                  fontWeight: selected?._id === convo._id ? 'bold' : '400',
+                  borderRadius: 10,
+
+                  backgroundColor:
+                    selected?._id === convo._id
+                      ? useMantineTheme().colors.dark[6]
+                      : 'transparent',
+                  // fontWeight: selected?._id === convo._id ? 'bold' : '400',
                   color: selected?._id === convo._id ? 'white' : '#C1C2C5',
                 }}
               >

@@ -26,7 +26,6 @@ const socket = io('http://localhost:3000')
 
 const Message = ({ data, messages, setMessages, isLoading, type }: any) => {
   const { data: organisationData } = useAppContext()
-  // const channel = data
   const channelCollaborators = data?.collaborators?.map((d: any) => d._id)
   const userId = organisationData?.profile?._id
 
@@ -84,18 +83,21 @@ const Message = ({ data, messages, setMessages, isLoading, type }: any) => {
           name: organisationData?.profile?.username,
         }
 
-        socket.emit('message', {
-          message,
-          ...(type === 'channel' && {
-            channelId: data?._id,
-            channelName: data?.name,
-          }),
-          ...(type === 'conversation' && {
-            conversationId: data?._id,
-            collaborators: [data?.collaborators[0]?._id, userId],
-            isSelf: data?.collaborators[0]?._id === userId,
-          }),
-        })
+        if (socket.connected) {
+          socket.emit('message', {
+            message,
+            organisation: data?.organisation,
+            ...(data?.isChannel && {
+              channelId: data?._id,
+              channelName: data?.name,
+            }),
+            ...(data?.isConversation && {
+              conversationId: data?._id,
+              collaborators: [data?.collaborators[0]?._id, userId],
+              isSelf: data?.collaborators[0]?._id === userId,
+            }),
+          })
+        }
 
         setEditorState(EditorState.createEmpty())
         returnValue = true
@@ -110,12 +112,13 @@ const Message = ({ data, messages, setMessages, isLoading, type }: any) => {
     })
 
     socket.on('message', (data) => {
-      if (data?.collaborators?.includes(userId)) {
+      console.log(data)
+      if (
+        data?.collaborators?.includes(userId) ||
+        channelCollaborators?.includes(userId)
+      ) {
         setMessages((prevMessages: any) => [...prevMessages, data?.message])
       }
-      // else if (channelCollaborators?.includes(userId)) {
-      setMessages((prevMessages: any) => [...prevMessages, data?.message])
-      // }
     })
 
     socket.on('notification', (data) => {
@@ -127,29 +130,34 @@ const Message = ({ data, messages, setMessages, isLoading, type }: any) => {
         sanitizedContent.length > maxLength
           ? sanitizedContent.slice(0, maxLength) + '...'
           : sanitizedContent
-      if (data?.collaborators?.includes(userId)) {
-        notifications.show({
-          title: data?.message?.username,
-          message: truncatedContent,
-          color: 'green',
-          p: 'md',
-        })
-      } else if (channelCollaborators?.includes(userId)) {
-        notifications.show({
-          title: `${
-            data?.message?.username
-          } #${data?.channelName?.toLowerCase()}`,
-          message: truncatedContent,
-          color: 'green',
-          p: 'md',
-        })
+      if (organisationData?._id === data.organisation) {
+        if (data?.collaborators?.includes(userId)) {
+          notifications.show({
+            title: data?.message?.username,
+            message: truncatedContent,
+            color: 'green',
+            p: 'md',
+          })
+        } else if (
+          channelCollaborators?.includes(userId) &&
+          data?.channelName
+        ) {
+          notifications.show({
+            title: `${
+              data?.message?.username
+            } #${data?.channelName?.toLowerCase()}`,
+            message: truncatedContent,
+            color: 'green',
+            p: 'md',
+          })
+        }
       }
     })
 
     return () => {
       socket.off('message')
       socket.off('notification')
-      socket.disconnect()
+      // socket.disconnect()
     }
   }, [])
 

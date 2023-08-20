@@ -76,12 +76,14 @@ export default function DefaultLayout({
   const { classes } = useStyles()
 
   function handleChannel(channel: any) {
+    setSelected({})
     router.push(`/c/${channel?._id}`)
     localStorage.setItem('channel', 'true')
     setSelected(channel)
     setMessages([])
   }
   function handleConversation(data: any) {
+    setSelected({})
     router.push(`/c/${data?._id}`)
     localStorage.setItem('channel', 'false')
     setSelected(data)

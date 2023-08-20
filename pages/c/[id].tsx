@@ -23,6 +23,7 @@ export default function Client() {
         const res = await axios.get(`/messages`, {
           params: {
             channelId: data?.data?.data?._id,
+            organisation: organisationData?._id,
           },
         })
         setMessages(res?.data?.data)
@@ -46,6 +47,7 @@ export default function Client() {
             const res = await axios.get(`/messages`, {
               params: {
                 collaborators: collaboratorIds.join(','),
+                organisation: organisationData?._id,
                 isSelf:
                   data?.data?.data?.collaborators[0]?._id ===
                   organisationData?.profile?._id,

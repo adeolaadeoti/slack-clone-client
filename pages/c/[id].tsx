@@ -14,7 +14,7 @@ export default function Client() {
   const [channel, setChannel] = React.useState('')
   const [messages, setMessages] = React.useState<any>([])
 
-  const { data: organisationData } = useAppContext()
+  const { data: organisationData, conversations } = useAppContext()
   const query = useQuery([`channel/${id}`], () => axios.get(`/channel/${id}`), {
     enabled: channel === 'true',
     onSuccess: async (data) => {
@@ -69,6 +69,7 @@ export default function Client() {
   return (
     <DefaultLayout
       data={organisationData}
+      conversations={conversations}
       selected={selected}
       setSelected={setSelected}
       setMessages={setMessages}
@@ -81,6 +82,7 @@ export default function Client() {
           messages={messages}
           setMessages={setMessages}
           // selected={selected}
+          // setSelected={setSelected}
           type={channel === 'true' ? 'channel' : 'conversation'}
           data={
             channel === 'true'

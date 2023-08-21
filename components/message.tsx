@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
 import {
   Avatar,
-  Box,
   Flex,
   Paper,
   Stack,
@@ -17,15 +16,12 @@ import { convertToHTML } from 'draft-convert'
 import DOMPurify from 'dompurify'
 import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css'
 import { useAppContext } from '../providers/app-provider'
-import io from 'socket.io-client'
 import { BiEditAlt, BiUserPlus } from 'react-icons/bi'
 import { formatDate } from '../utils/helpers'
 import { notifications } from '@mantine/notifications'
-// Connect to the WebSocket server
-const socket = io('http://localhost:3000')
 
 const Message = ({ data, messages, setMessages, isLoading, type }: any) => {
-  const { data: organisationData } = useAppContext()
+  const { data: organisationData, socket } = useAppContext()
   const channelCollaborators = data?.collaborators?.map((d: any) => d._id)
   const userId = organisationData?.profile?._id
 
@@ -107,12 +103,7 @@ const Message = ({ data, messages, setMessages, isLoading, type }: any) => {
   }
 
   React.useEffect(() => {
-    socket.on('connect', () => {
-      console.log('Connected to the server')
-    })
-
     socket.on('message', (data) => {
-      console.log(data)
       if (
         data?.collaborators?.includes(userId) ||
         channelCollaborators?.includes(userId)
@@ -157,7 +148,6 @@ const Message = ({ data, messages, setMessages, isLoading, type }: any) => {
     return () => {
       socket.off('message')
       socket.off('notification')
-      // socket.disconnect()
     }
   }, [])
 

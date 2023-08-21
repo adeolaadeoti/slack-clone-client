@@ -12,6 +12,7 @@ import {
   useMantineTheme,
   Stack,
   Skeleton,
+  Box,
 } from '@mantine/core'
 import { getColorByIndex } from '../../utils/helpers'
 import { TbHeadphonesOff, TbHeadphones } from 'react-icons/tb'
@@ -67,6 +68,7 @@ const useStyles = createStyles((theme) => ({
 
 export default function DefaultLayout({
   children,
+  conversations,
   data,
   selected,
   setSelected,
@@ -74,6 +76,7 @@ export default function DefaultLayout({
 }: any) {
   const router = useRouter()
   const { classes } = useStyles()
+  // const [conversations, setConversations] = React.useState(data?.conversations)
 
   function handleChannel(channel: any) {
     setSelected({})
@@ -91,10 +94,11 @@ export default function DefaultLayout({
   }
 
   // React.useEffect(() => {
-  //   socket.on('notification', (data) => {
-  //     console.log(data)
-  //   })
-  // }, [])
+  //   if (data?.conversations) {
+  //     console.log(data?.conversations)
+  //     setConversations(data?.conversations)
+  //   }
+  // }, [data?.conversations])
 
   return (
     <Grid h="100vh" m="0">
@@ -133,7 +137,6 @@ export default function DefaultLayout({
                 style={{
                   transition: 'all .2s ease',
                   borderRadius: 10,
-
                   // fontWeight: selected?._id === channel._id ? 'bold' : '400',
                   backgroundColor:
                     selected?._id === channel._id
@@ -158,13 +161,13 @@ export default function DefaultLayout({
                 </ActionIcon>
               </Tooltip>
             </Group>
-            {!data?.conversations && (
+            {!conversations && (
               <Stack spacing="sm">
                 <Skeleton height={15} width={250} radius="md" />
                 <Skeleton height={15} width={150} radius="md" />
               </Stack>
             )}
-            {data?.conversations?.map((convo: any, index: any) => (
+            {conversations?.map((convo: any, index: any) => (
               <UnstyledButton
                 w="100%"
                 px="sm"
@@ -192,6 +195,25 @@ export default function DefaultLayout({
                   {convo?.name[0].toLowerCase()}
                 </Avatar>
                 {convo.name}{' '}
+                {convo.createdBy.isOnline ? (
+                  <Box
+                    h="1rem"
+                    w="1rem"
+                    bg="green"
+                    style={{
+                      borderRadius: '5rem',
+                    }}
+                  ></Box>
+                ) : (
+                  <Box
+                    h="1rem"
+                    w="1rem"
+                    bg="gray"
+                    style={{
+                      borderRadius: '5rem',
+                    }}
+                  ></Box>
+                )}
                 <Text fw="100" c={useMantineTheme().colors.dark[3]} span>
                   {convo.isLoggedIn ? 'you' : ''}{' '}
                 </Text>

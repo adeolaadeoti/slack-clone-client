@@ -177,7 +177,7 @@ export default function DefaultLayout({
                 }}
               >
                 <Avatar
-                  src={`/avatars/${convo?.name[0].toLowerCase()}.png`}
+                  src={`/avatars/${convo?.name?.[0].toLowerCase()}.png`}
                   size="md"
                   color={getColorByIndex(index)}
                   radius="xl"

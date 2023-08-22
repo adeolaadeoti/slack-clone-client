@@ -46,22 +46,30 @@ export const AppContextProvider = ({ children }: any) => {
     socket.connect()
     if (data) {
       setChannels(data?.channels)
+      setConversations(data?.conversations)
       socket.emit('user-join', data?.profile?._id)
       socket.on('user-join', ({ id, isOnline }) => {
         const updatedConversations = data?.conversations.map(
           (conversation: any) => {
-            if (conversation.createdById === id) {
-              return {
-                ...conversation,
-                isOnline,
-              }
+            if (conversation.createdBy === id) {
+              const newConvo = { ...conversation, isOnline }
+              socket.emit('update-conversation', newConvo)
+              return newConvo
             }
             return conversation
           }
         )
-        console.log(updatedConversations, id)
+
+        console.log(data?.conversations)
         setConversations(updatedConversations)
       })
+
+      // socket.emit('user-join', {
+      //   id: data?.profile?._id,
+      //   conversationId: convo?._id,
+      //   // createdBy: id,
+      // })
+
       // socket.on('notificati-layout', ({ channelId, collaborators }) => {
       // const updatedChannels = data?.channels.map((channel: any) => {
       //   if (channel._id === channelId) {
@@ -89,7 +97,8 @@ export const AppContextProvider = ({ children }: any) => {
       // console.log(data?.channels)
     }
     return () => {
-      socket.off('user-join')
+      // socket.off('user-join')
+      // socket.off('update-conversation')
       // socket.off('notification')
       // socket.disconnect()
     }

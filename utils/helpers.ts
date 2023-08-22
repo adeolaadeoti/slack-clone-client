@@ -1,3 +1,5 @@
+import DOMPurify from 'dompurify'
+
 const primaryColors = ['red', 'green', 'yellow', 'blue', 'purple']
 const primaryColorsHex = [
   '#D35400', // Dark Orange
@@ -44,4 +46,14 @@ export function formatDate(dateString: string): FormattedDate {
     time: formattedTime.replace(',', ' @ '),
     timeRender: timeRender,
   }
+}
+
+export function truncateDraftToHtml(content: string) {
+  const sanitizedContent = DOMPurify.sanitize(content, {
+    ALLOWED_TAGS: [],
+  })
+  const maxLength = 28
+  return sanitizedContent.length > maxLength
+    ? sanitizedContent.slice(0, maxLength) + '...'
+    : sanitizedContent
 }

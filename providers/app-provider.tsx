@@ -15,6 +15,8 @@ interface ContextProps {
   socket: Socket
   data: any
   conversations: any
+  setConversations: any
+  channels: any
   refreshApp: () => void
   isLoading: boolean
   channelData: any
@@ -27,6 +29,7 @@ const AppContext = createContext<ContextProps | undefined>(undefined)
 export const AppContextProvider = ({ children }: any) => {
   const [data, setData] = useState<any | null>(null)
   const [conversations, setConversations] = useState<any | null>(null)
+  const [channels, setChannels] = useState<any | null>(null)
   const [channelData, setChannelData] = useState<any>(null)
 
   const query = useQuery(
@@ -42,24 +45,52 @@ export const AppContextProvider = ({ children }: any) => {
   React.useEffect(() => {
     socket.connect()
     if (data) {
+      setChannels(data?.channels)
       socket.emit('user-join', data?.profile?._id)
       socket.on('user-join', ({ id, isOnline }) => {
         const updatedConversations = data?.conversations.map(
           (conversation: any) => {
-            if (conversation.createdBy._id === id) {
+            if (conversation.createdById === id) {
               return {
                 ...conversation,
-                createdBy: { ...conversation.createdBy, isOnline },
+                isOnline,
               }
             }
             return conversation
           }
         )
+        console.log(updatedConversations, id)
         setConversations(updatedConversations)
       })
+      // socket.on('notificati-layout', ({ channelId, collaborators }) => {
+      // const updatedChannels = data?.channels.map((channel: any) => {
+      //   if (channel._id === channelId) {
+      //     return {
+      //       ...channel,
+      //       hasUnreadMessages: true,
+      //     }
+      //   }
+      //   return channel
+      // })
+      // setChannels(updatedChannels)
+      // const updatedConversations = data?.conversations.map(
+      //   (conversation: any) => {
+      //     if (conversation._id === conversationId) {
+      //       return {
+      //         ...conversation,
+      //         hasUnreadMessages: true,
+      //       }
+      //     }
+      //     return conversation
+      //   }
+      // )
+      // setChannels(updatedConversations)
+      // })
+      // console.log(data?.channels)
     }
     return () => {
       socket.off('user-join')
+      // socket.off('notification')
       // socket.disconnect()
     }
   }, [data])
@@ -73,6 +104,8 @@ export const AppContextProvider = ({ children }: any) => {
         data,
         setData,
         conversations,
+        setConversations,
+        channels,
         refreshApp: query.refetch,
         isLoading: query.isLoading,
         channelData,

@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import {
   createStyles,
-  Avatar,
   UnstyledButton,
   Group,
   Text,
@@ -24,6 +23,7 @@ import {
 
 import { LuChevronsUpDown } from 'react-icons/lu'
 import { useRouter } from 'next/router'
+import { useAppContext } from '../providers/app-provider'
 
 const useStyles = createStyles((theme) => ({
   user: {
@@ -45,6 +45,7 @@ interface AccountSwitcherProps {
 export default function AccountSwitcher({ data }: AccountSwitcherProps) {
   const router = useRouter()
   const { classes, theme, cx } = useStyles()
+  const { socket } = useAppContext()
   const [userMenuOpened, setUserMenuOpened] = useState(false)
 
   function handleLogout() {
@@ -52,6 +53,7 @@ export default function AccountSwitcher({ data }: AccountSwitcherProps) {
     localStorage.removeItem('signUpEmail')
     localStorage.removeItem('access-token')
     localStorage.removeItem('channel')
+    socket.disconnect()
     router.push('/signin')
   }
 

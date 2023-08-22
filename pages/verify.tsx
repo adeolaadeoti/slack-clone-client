@@ -41,7 +41,6 @@ const Verify: NextPage = () => {
       })
     },
     onSuccess: (data) => {
-      console.log(data)
       notifications.show({
         message: `Confirmed as ${data?.data?.data?.email}`,
         color: 'green',

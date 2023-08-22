@@ -17,13 +17,18 @@ import DOMPurify from 'dompurify'
 import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css'
 import { useAppContext } from '../providers/app-provider'
 import { BiEditAlt, BiUserPlus } from 'react-icons/bi'
-import { formatDate } from '../utils/helpers'
+import { formatDate, truncateDraftToHtml } from '../utils/helpers'
 import { notifications } from '@mantine/notifications'
 
 const Message = ({ data, messages, setMessages, isLoading, type }: any) => {
-  const { data: organisationData, socket } = useAppContext()
+  const { data: organisationData, socket, conversations } = useAppContext()
   const channelCollaborators = data?.collaborators?.map((d: any) => d._id)
   const userId = organisationData?.profile?._id
+  const conversationCollaborators = conversations.map((conversation: any) => {
+    return conversation.collaborators.map(
+      (collaborator: any) => collaborator._id
+    )
+  })
 
   const [editorState, setEditorState] = useState(() =>
     EditorState.createEmpty()
@@ -86,11 +91,13 @@ const Message = ({ data, messages, setMessages, isLoading, type }: any) => {
             ...(data?.isChannel && {
               channelId: data?._id,
               channelName: data?.name,
+              collaborators: data?.collaborators,
             }),
             ...(data?.isConversation && {
               conversationId: data?._id,
-              collaborators: [data?.collaborators[0]?._id, userId],
-              isSelf: data?.collaborators[0]?._id === userId,
+              collaborators: data?.collaborators,
+              isSelf:
+                data?.collaborators[0]?._id === data?.collaborators[1]?._id,
             }),
           })
         }
@@ -103,47 +110,48 @@ const Message = ({ data, messages, setMessages, isLoading, type }: any) => {
   }
 
   React.useEffect(() => {
-    socket.on('message', (data) => {
+    socket.on('message', ({ collaborators, message }) => {
       if (
-        data?.collaborators?.includes(userId) ||
+        collaborators?.includes(userId) ||
         channelCollaborators?.includes(userId)
       ) {
-        setMessages((prevMessages: any) => [...prevMessages, data?.message])
+        setMessages((prevMessages: any) => [...prevMessages, message])
       }
     })
 
-    socket.on('notification', (data) => {
-      const sanitizedContent = DOMPurify.sanitize(data?.message?.content, {
-        ALLOWED_TAGS: [],
-      })
-      const maxLength = 28
-      const truncatedContent =
-        sanitizedContent.length > maxLength
-          ? sanitizedContent.slice(0, maxLength) + '...'
-          : sanitizedContent
-      if (organisationData?._id === data.organisation) {
-        if (data?.collaborators?.includes(userId)) {
+    socket.on(
+      'notification',
+      ({ message, organisation, collaborators, channelName }) => {
+        const collaboratorsId = collaborators?.map((collab: any) => {
+          return collab._id
+        })
+
+        const exists = conversationCollaborators.some(
+          (collaboratorArray: any) =>
+            collaboratorArray.every((collaborator: any) =>
+              collaboratorsId.includes(collaborator)
+            )
+        )
+        if (organisationData?._id === organisation) {
+          if (exists) {
+            notifications.show({
+              title: message?.username,
+              message: truncateDraftToHtml(message?.content),
+              color: 'green',
+              p: 'md',
+            })
+          }
+        }
+        if (collaboratorsId?.includes(userId) && channelName) {
           notifications.show({
-            title: data?.message?.username,
-            message: truncatedContent,
-            color: 'green',
-            p: 'md',
-          })
-        } else if (
-          channelCollaborators?.includes(userId) &&
-          data?.channelName
-        ) {
-          notifications.show({
-            title: `${
-              data?.message?.username
-            } #${data?.channelName?.toLowerCase()}`,
-            message: truncatedContent,
+            title: `${message?.username} #${channelName?.toLowerCase()}`,
+            message: truncateDraftToHtml(message?.content),
             color: 'green',
             p: 'md',
           })
         }
       }
-    })
+    )
 
     return () => {
       socket.off('message')
@@ -232,7 +240,7 @@ const Message = ({ data, messages, setMessages, isLoading, type }: any) => {
                 )}
                 {type === 'conversation' && (
                   <>
-                    {data?.isOwner ? (
+                    {data?.isSelf ? (
                       <>
                         <Text weight="bold" c="white">
                           This space is just for you.

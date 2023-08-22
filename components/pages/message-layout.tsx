@@ -21,10 +21,11 @@ export default function MessageLayout({
   messages,
   setMessages,
   refetchConvoQuery,
-  // selected,
-  // setSelected,
-}: any) {
+}: // selected,
+// setSelected,
+any) {
   const isLoading = !data?.name
+
   return (
     <Flex direction="column" justify="space-between">
       <Flex

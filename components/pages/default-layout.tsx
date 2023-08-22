@@ -20,9 +20,6 @@ import { HiPlus } from 'react-icons/hi'
 import React from 'react'
 import AccountSwitcher from '../account-switcher'
 import { useRouter } from 'next/router'
-// import { io } from 'socket.io-client'
-
-// const socket = io('http://localhost:3000')
 
 const useStyles = createStyles((theme) => ({
   section: {
@@ -69,6 +66,7 @@ const useStyles = createStyles((theme) => ({
 export default function DefaultLayout({
   children,
   conversations,
+  channels,
   data,
   selected,
   setSelected,
@@ -76,7 +74,6 @@ export default function DefaultLayout({
 }: any) {
   const router = useRouter()
   const { classes } = useStyles()
-  // const [conversations, setConversations] = React.useState(data?.conversations)
 
   function handleChannel(channel: any) {
     setSelected({})
@@ -92,13 +89,6 @@ export default function DefaultLayout({
     setSelected(data)
     setMessages([])
   }
-
-  // React.useEffect(() => {
-  //   if (data?.conversations) {
-  //     console.log(data?.conversations)
-  //     setConversations(data?.conversations)
-  //   }
-  // }, [data?.conversations])
 
   return (
     <Grid h="100vh" m="0">
@@ -120,14 +110,14 @@ export default function DefaultLayout({
               </Tooltip>
             </Group>
 
-            {!data?.channels && (
+            {!channels && (
               <Stack spacing="sm">
                 <Skeleton height={15} width={250} radius="md" />
                 <Skeleton height={15} width={150} radius="md" />
               </Stack>
             )}
 
-            {data?.channels?.map((channel: any) => (
+            {channels?.map((channel: any) => (
               <UnstyledButton
                 w="100%"
                 px="sm"
@@ -137,12 +127,12 @@ export default function DefaultLayout({
                 style={{
                   transition: 'all .2s ease',
                   borderRadius: 10,
-                  // fontWeight: selected?._id === channel._id ? 'bold' : '400',
+                  fontWeight: channel?.hasUnreadMessages ? 'bold' : '400',
+                  color: channel?.hasUnreadMessages ? 'white' : '#C1C2C5',
                   backgroundColor:
                     selected?._id === channel._id
                       ? useMantineTheme().colors.dark[6]
                       : 'transparent',
-                  color: selected?._id === channel._id ? 'white' : '#C1C2C5',
                 }}
               >
                 # {channel?.name}
@@ -177,13 +167,13 @@ export default function DefaultLayout({
                 style={{
                   transition: 'all .2s ease',
                   borderRadius: 10,
+                  fontWeight: convo?.hasUnreadMessages ? 'bold' : '400',
+                  color: convo?.hasUnreadMessages ? 'white' : '#C1C2C5',
 
                   backgroundColor:
                     selected?._id === convo._id
                       ? useMantineTheme().colors.dark[6]
                       : 'transparent',
-                  // fontWeight: selected?._id === convo._id ? 'bold' : '400',
-                  color: selected?._id === convo._id ? 'white' : '#C1C2C5',
                 }}
               >
                 <Avatar
@@ -195,10 +185,10 @@ export default function DefaultLayout({
                   {convo?.name[0].toLowerCase()}
                 </Avatar>
                 {convo.name}{' '}
-                {convo.createdBy.isOnline ? (
+                {convo.isOnline ? (
                   <Box
-                    h="1rem"
-                    w="1rem"
+                    h=".7rem"
+                    w=".7rem"
                     bg="green"
                     style={{
                       borderRadius: '5rem',
@@ -206,8 +196,8 @@ export default function DefaultLayout({
                   ></Box>
                 ) : (
                   <Box
-                    h="1rem"
-                    w="1rem"
+                    h=".7rem"
+                    w=".7rem"
                     bg="gray"
                     style={{
                       borderRadius: '5rem',
@@ -215,7 +205,7 @@ export default function DefaultLayout({
                   ></Box>
                 )}
                 <Text fw="100" c={useMantineTheme().colors.dark[3]} span>
-                  {convo.isLoggedIn ? 'you' : ''}{' '}
+                  {convo.isSelf ? 'you' : ''}{' '}
                 </Text>
               </UnstyledButton>
             ))}

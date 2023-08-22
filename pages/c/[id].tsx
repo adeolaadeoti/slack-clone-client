@@ -10,11 +10,12 @@ import { BackgroundImage } from '@mantine/core'
 export default function Client() {
   const router = useRouter()
   const { id } = router.query
+
   const [selected, setSelected] = React.useState<any>()
   const [channel, setChannel] = React.useState('')
   const [messages, setMessages] = React.useState<any>([])
 
-  const { data: organisationData, conversations } = useAppContext()
+  const { data: organisationData, conversations, channels } = useAppContext()
   const query = useQuery([`channel/${id}`], () => axios.get(`/channel/${id}`), {
     enabled: channel === 'true',
     onSuccess: async (data) => {
@@ -39,29 +40,22 @@ export default function Client() {
       onSuccess: async (data) => {
         if (channel === 'false') {
           setSelected(data?.data?.data)
-          const collaboratorIds = [
-            data?.data?.data?.collaborators[0]?._id,
-            organisationData?.profile?._id,
-          ]
           try {
             const res = await axios.get(`/messages`, {
               params: {
-                collaborators: collaboratorIds.join(','),
+                conversation: data?.data?.data?._id,
                 organisation: organisationData?._id,
-                isSelf:
-                  data?.data?.data?.collaborators[0]?._id ===
-                  organisationData?.profile?._id,
+                isSelf: data?.data?.data?.isSelf,
               },
             })
             setMessages(res?.data?.data)
-          } catch (error) {
-            console.log(error)
-          }
+          } catch (error) {}
         }
       },
     }
   )
 
+  // const hasUnread = messages?.some((message: any) => !message.hasRead)
   React.useEffect(() => {
     setChannel(localStorage.getItem('channel') as string)
   }, [id])
@@ -70,6 +64,7 @@ export default function Client() {
     <DefaultLayout
       data={organisationData}
       conversations={conversations}
+      channels={channels}
       selected={selected}
       setSelected={setSelected}
       setMessages={setMessages}

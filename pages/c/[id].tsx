@@ -9,13 +9,13 @@ import { BackgroundImage } from '@mantine/core'
 
 export default function Client() {
   const router = useRouter()
+  const { data: organisationData, conversations, channels } = useAppContext()
   const { id } = router.query
 
   const [selected, setSelected] = React.useState<any>()
   const [channel, setChannel] = React.useState('')
   const [messages, setMessages] = React.useState<any>([])
 
-  const { data: organisationData, conversations, channels } = useAppContext()
   const query = useQuery([`channel/${id}`], () => axios.get(`/channel/${id}`), {
     enabled: channel === 'true',
     onSuccess: async (data) => {

@@ -42,34 +42,34 @@ export const AppContextProvider = ({ children }: any) => {
     }
   )
 
+  function updateUserStatus(id: string, isOnline: boolean) {
+    const updatedConversations = data?.conversations?.map(
+      (conversation: any) => {
+        if (conversation.createdBy === id) {
+          const newConvo = { ...conversation, isOnline }
+          return newConvo
+        }
+        return conversation
+      }
+    )
+    setConversations(updatedConversations)
+  }
+
   React.useEffect(() => {
     socket.connect()
     if (data) {
       setChannels(data?.channels)
-      setConversations(data?.conversations)
-      socket.emit('user-join', data?.profile?._id)
+      // setConversations(data?.conversations)
+
+      socket.emit('user-join', { id: data?.profile?._id, isOnline: true })
       socket.on('user-join', ({ id, isOnline }) => {
-        const updatedConversations = data?.conversations.map(
-          (conversation: any) => {
-            if (conversation.createdBy === id) {
-              const newConvo = { ...conversation, isOnline }
-              socket.emit('update-conversation', newConvo)
-              return newConvo
-            }
-            return conversation
-          }
-        )
-
-        console.log(data?.conversations)
-        setConversations(updatedConversations)
+        // console.log({ id, isOnline })
+        updateUserStatus(id, isOnline)
       })
-
-      // socket.emit('user-join', {
-      //   id: data?.profile?._id,
-      //   conversationId: convo?._id,
-      //   // createdBy: id,
-      // })
-
+      socket.on('user-leave', ({ id, isOnline }) => {
+        // console.log({ id, isOnline })
+        updateUserStatus(id, isOnline)
+      })
       // socket.on('notificati-layout', ({ channelId, collaborators }) => {
       // const updatedChannels = data?.channels.map((channel: any) => {
       //   if (channel._id === channelId) {
@@ -81,7 +81,7 @@ export const AppContextProvider = ({ children }: any) => {
       //   return channel
       // })
       // setChannels(updatedChannels)
-      // const updatedConversations = data?.conversations.map(
+      // const updatedConversations = data?.conversations?.map(
       //   (conversation: any) => {
       //     if (conversation._id === conversationId) {
       //       return {
@@ -97,10 +97,10 @@ export const AppContextProvider = ({ children }: any) => {
       // console.log(data?.channels)
     }
     return () => {
-      // socket.off('user-join')
-      // socket.off('update-conversation')
+      socket.off('user-join')
+      socket.off('user-leave')
       // socket.off('notification')
-      // socket.disconnect()
+      socket.disconnect()
     }
   }, [data])
 

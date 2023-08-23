@@ -6,25 +6,24 @@ import {
   Stack,
   Text,
   ThemeIcon,
-  Tooltip,
   UnstyledButton,
   useMantineTheme,
 } from '@mantine/core'
 import { EditorState } from 'draft-js'
 import { Editor } from 'react-draft-wysiwyg'
 import { convertToHTML } from 'draft-convert'
-import DOMPurify from 'dompurify'
 import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css'
 import { useAppContext } from '../providers/app-provider'
 import { BiEditAlt, BiUserPlus } from 'react-icons/bi'
-import { formatDate, truncateDraftToHtml } from '../utils/helpers'
+import { truncateDraftToHtml } from '../utils/helpers'
 import { notifications } from '@mantine/notifications'
+import MessageList from './message-list'
 
 const Message = ({ data, messages, setMessages, isLoading, type }: any) => {
   const { data: organisationData, socket, conversations } = useAppContext()
   const channelCollaborators = data?.collaborators?.map((d: any) => d._id)
   const userId = organisationData?.profile?._id
-  const conversationCollaborators = conversations.map((conversation: any) => {
+  const conversationCollaborators = conversations?.map((conversation: any) => {
     return conversation.collaborators.map(
       (collaborator: any) => collaborator._id
     )
@@ -300,57 +299,7 @@ const Message = ({ data, messages, setMessages, isLoading, type }: any) => {
             </Flex>
           </>
         )}
-        {messages?.map((msg: any) => (
-          <Flex gap="sm" align="center" key={msg?._id}>
-            {msg?.username ? (
-              <Avatar
-                src={`/avatars/${msg?.username?.[0].toLowerCase()}.png`}
-                size="xl"
-                radius="xl"
-              />
-            ) : (
-              <Avatar
-                src={`/avatars/${msg?.sender?.username?.[0].toLowerCase()}.png`}
-                size="xl"
-                radius="xl"
-              />
-            )}
-            <Flex direction="column">
-              <Flex align="center" gap="md">
-                <Text
-                  fz="sm"
-                  fw="bold"
-                  c={useMantineTheme().colors.dark[2]}
-                  span
-                >
-                  {msg?.sender?.username ?? msg?.username}
-                </Text>
-                <Tooltip
-                  label={msg?.time ?? formatDate(msg?.createdAt).time}
-                  withArrow
-                  position="right"
-                >
-                  <Text
-                    fz="xs"
-                    tt="lowercase"
-                    c={useMantineTheme().colors.dark[3]}
-                    span
-                  >
-                    {msg?.timeRender ?? formatDate(msg?.createdAt).timeRender}
-                  </Text>
-                </Tooltip>
-              </Flex>
-              <div
-                className="chat-wrapper"
-                dangerouslySetInnerHTML={{
-                  __html: DOMPurify.sanitize(msg.content, {
-                    ADD_ATTR: ['target'],
-                  }),
-                }}
-              />
-            </Flex>
-          </Flex>
-        ))}
+        {messages?.length >= 1 && <MessageList messages={messages} />}
       </Stack>
 
       {!data?.isChannel && (

@@ -62,7 +62,6 @@ const useStyles = createStyles((theme) => ({
     },
   },
 }))
-
 export default function DefaultLayout({
   children,
   conversations,

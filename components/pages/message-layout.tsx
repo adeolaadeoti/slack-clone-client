@@ -20,10 +20,7 @@ export default function MessageLayout({
   type,
   messages,
   setMessages,
-  refetchConvoQuery,
-}: // selected,
-// setSelected,
-any) {
+}: any) {
   const isLoading = !data?.name
 
   return (

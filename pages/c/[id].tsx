@@ -13,7 +13,6 @@ export default function Client() {
     data: organisationData,
     conversations,
     channels,
-    setChannels,
     socket,
     theme,
   } = useAppContext()
@@ -64,24 +63,6 @@ export default function Client() {
 
   React.useEffect(() => {
     setChannel(localStorage.getItem('channel') as string)
-
-    // if (channels) {
-    //   const updatedChannels = channels?.map((channel: any) => {
-    //     if (channel._id === id) {
-    //       const updatedHasNotOpen = channel.hasNotOpen.filter(
-    //         (userId: any) => userId !== organisationData?.profile?._id
-    //       )
-    //       return {
-    //         ...channel,
-    //         hasNotOpen: updatedHasNotOpen,
-    //       }
-    //     } else {
-    //       return channel
-    //     }
-    //   })
-    //   setChannels(updatedChannels)
-    //   console.log(organisationData?.profile?._id, updatedChannels?.hasNotOpen)
-    // }
   }, [id])
 
   return (
@@ -90,7 +71,6 @@ export default function Client() {
       socket={socket}
       conversations={conversations}
       channels={channels}
-      setChannels={setChannels}
       selected={selected}
       setSelected={setSelected}
       setMessages={setMessages}

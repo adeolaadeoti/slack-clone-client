@@ -65,9 +65,7 @@ export default function DefaultLayout({
   children,
   conversations,
   channels,
-  setChannels,
   data,
-  socket,
   selected,
   setSelected,
   setMessages,
@@ -81,38 +79,15 @@ export default function DefaultLayout({
     setSelected(channel)
     router.push(`/c/${channel?._id}`)
     localStorage.setItem('channel', 'true')
-    // setMessages([])
+    setMessages([])
   }
   function handleConversation(data: any) {
-    setSelected({})
+    // setSelected({})
+    setSelected(data)
     router.push(`/c/${data?._id}`)
     localStorage.setItem('channel', 'false')
     setMessages([])
   }
-
-  React.useEffect(() => {
-    if (channels?.length) {
-      const updatedChannels = channels?.map((channel: any) => {
-        if (channel._id === router.query.id) {
-          const updatedHasNotOpen = channel.hasNotOpen.filter(
-            (userId: any) => userId !== data?.profile?._id
-          )
-          return {
-            ...channel,
-            hasNotOpen: updatedHasNotOpen,
-          }
-        } else {
-          return channel
-        }
-      })
-      // console.log(updatedChannels)
-      setChannels(updatedChannels)
-      console.log(data?.profile?._id, updatedChannels)
-    }
-  }, [
-    router.query.id,
-    // channels?.length
-  ])
 
   return (
     <Grid h="100vh" m="0">
@@ -195,8 +170,12 @@ export default function DefaultLayout({
                 style={{
                   transition: 'all .2s ease',
                   borderRadius: 10,
-                  fontWeight: convo?.hasUnreadMessages ? 'bold' : '400',
-                  color: convo?.hasUnreadMessages ? 'white' : '#C1C2C5',
+                  fontWeight: convo?.hasNotOpen?.includes(data?.profile?._id)
+                    ? 'bold'
+                    : '400',
+                  color: convo?.hasNotOpen?.includes(data?.profile?._id)
+                    ? 'white'
+                    : '#C1C2C5',
 
                   backgroundColor:
                     selected?._id === convo._id

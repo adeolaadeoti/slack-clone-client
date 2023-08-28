@@ -65,7 +65,6 @@ export const AppContextProvider = ({ children }: any) => {
     socket.connect()
     if (data) {
       setChannels(data?.channels)
-      // setConversations(data?.conversations)
       socket.emit('user-join', { id: data?.profile?._id, isOnline: true })
       socket.on('user-join', ({ id, isOnline }) => {
         updateUserStatus(id, isOnline)
@@ -73,7 +72,16 @@ export const AppContextProvider = ({ children }: any) => {
       socket.on('user-leave', ({ id, isOnline }) => {
         updateUserStatus(id, isOnline)
       })
+    }
+    return () => {
+      socket.off('user-join')
+      socket.off('user-leave')
+      socket.disconnect()
+    }
+  }, [data])
 
+  React.useEffect(() => {
+    if (data && id && localStorage.getItem('channel')) {
       socket.emit('channel-open', {
         id,
         userId: data?.profile?._id,
@@ -88,14 +96,32 @@ export const AppContextProvider = ({ children }: any) => {
         setChannels(channels)
       })
     }
+    if (data && id && localStorage.getItem('channel') === 'false') {
+      socket.emit('convo-open', {
+        id,
+        userId: data?.profile?._id,
+      })
+      socket.on('convo-updated', (updatedConversations) => {
+        const conversations = data?.conversations?.map((c: any) => {
+          if (c._id === id) {
+            console.log(updatedConversations.hasNotOpen)
+            return {
+              ...c,
+              hasNotOpen: updatedConversations.hasNotOpen,
+            }
+          }
+          return c
+        })
+        setConversations(conversations)
+      })
+    }
     return () => {
-      socket.off('user-join')
-      socket.off('user-leave')
       socket.off('channel-open')
       socket.off('channel-updated')
-      socket.disconnect()
+      socket.off('convo-open')
+      socket.off('convo-updated')
     }
-  }, [data])
+  }, [data, id])
 
   if (query.isLoading) return <LoadingOverlay visible />
 

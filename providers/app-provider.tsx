@@ -1,8 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
 import React, { createContext, useContext, useState } from 'react'
 import axios from '../services/axios'
-import { LoadingOverlay } from '@mantine/core'
+import { LoadingOverlay, MantineTheme, useMantineTheme } from '@mantine/core'
 import io, { Socket } from 'socket.io-client'
+import { useRouter } from 'next/router'
 const socket = io('http://localhost:3000')
 
 interface Data {
@@ -12,11 +13,13 @@ interface Data {
 }
 
 interface ContextProps {
+  theme: MantineTheme
   socket: Socket
   data: any
   conversations: any
   setConversations: any
   channels: any
+  setChannels: any
   refreshApp: () => void
   isLoading: boolean
   channelData: any
@@ -31,6 +34,9 @@ export const AppContextProvider = ({ children }: any) => {
   const [conversations, setConversations] = useState<any | null>(null)
   const [channels, setChannels] = useState<any | null>(null)
   const [channelData, setChannelData] = useState<any>(null)
+  const theme = useMantineTheme()
+  const router = useRouter()
+  const { id } = router.query
 
   const query = useQuery(
     ['organisation'],
@@ -60,46 +66,33 @@ export const AppContextProvider = ({ children }: any) => {
     if (data) {
       setChannels(data?.channels)
       // setConversations(data?.conversations)
-
       socket.emit('user-join', { id: data?.profile?._id, isOnline: true })
       socket.on('user-join', ({ id, isOnline }) => {
-        // console.log({ id, isOnline })
         updateUserStatus(id, isOnline)
       })
       socket.on('user-leave', ({ id, isOnline }) => {
-        // console.log({ id, isOnline })
         updateUserStatus(id, isOnline)
       })
-      // socket.on('notificati-layout', ({ channelId, collaborators }) => {
-      // const updatedChannels = data?.channels.map((channel: any) => {
-      //   if (channel._id === channelId) {
-      //     return {
-      //       ...channel,
-      //       hasUnreadMessages: true,
-      //     }
-      //   }
-      //   return channel
-      // })
-      // setChannels(updatedChannels)
-      // const updatedConversations = data?.conversations?.map(
-      //   (conversation: any) => {
-      //     if (conversation._id === conversationId) {
-      //       return {
-      //         ...conversation,
-      //         hasUnreadMessages: true,
-      //       }
-      //     }
-      //     return conversation
-      //   }
-      // )
-      // setChannels(updatedConversations)
-      // })
-      // console.log(data?.channels)
+
+      socket.emit('channel-open', {
+        id,
+        userId: data?.profile?._id,
+      })
+      socket.on('channel-updated', (updatedChannel) => {
+        const channels = data?.channels?.map((c: any) => {
+          if (c._id === id) {
+            return updatedChannel
+          }
+          return c
+        })
+        setChannels(channels)
+      })
     }
     return () => {
       socket.off('user-join')
       socket.off('user-leave')
-      // socket.off('notification')
+      socket.off('channel-open')
+      socket.off('channel-updated')
       socket.disconnect()
     }
   }, [data])
@@ -109,12 +102,14 @@ export const AppContextProvider = ({ children }: any) => {
   return (
     <AppContext.Provider
       value={{
+        theme,
         socket,
         data,
         setData,
         conversations,
         setConversations,
         channels,
+        setChannels,
         refreshApp: query.refetch,
         isLoading: query.isLoading,
         channelData,

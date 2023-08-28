@@ -1,12 +1,4 @@
-import {
-  Avatar,
-  Flex,
-  Paper,
-  Skeleton,
-  Text,
-  ThemeIcon,
-  useMantineTheme,
-} from '@mantine/core'
+import { Avatar, Flex, Paper, Skeleton, Text, ThemeIcon } from '@mantine/core'
 import React from 'react'
 import { getColorHexByIndex } from '../../utils/helpers'
 import { LuUserPlus } from 'react-icons/lu'
@@ -20,19 +12,21 @@ export default function MessageLayout({
   type,
   messages,
   setMessages,
+  theme,
+  socket,
 }: any) {
   const isLoading = !data?.name
 
   return (
     <Flex direction="column" justify="space-between">
       <Flex
-        bg={useMantineTheme().colors.dark[7]}
+        bg={theme.colors.dark[7]}
         py={data?.isOwner ? '1.85rem' : '1rem'}
         px="1.85rem"
         align="center"
         justify="space-between"
         style={{
-          borderBottom: `1px solid ${useMantineTheme().colors.dark[4]}`,
+          borderBottom: `1px solid ${theme.colors.dark[4]}`,
         }}
       >
         {isLoading && <Skeleton height={15} width={150} radius="md" />}
@@ -59,7 +53,7 @@ export default function MessageLayout({
                   ml="-1rem"
                   size="md"
                   style={{
-                    border: `2px solid ${useMantineTheme().colors.dark[7]}`,
+                    border: `2px solid ${theme.colors.dark[7]}`,
                     backgroundColor: getColorHexByIndex(index),
                   }}
                   opacity={1}
@@ -73,7 +67,7 @@ export default function MessageLayout({
                 pr="lg"
                 size="sm"
                 style={{
-                  borderRight: `1px solid ${useMantineTheme().colors.dark[4]}`,
+                  borderRight: `1px solid ${theme.colors.dark[4]}`,
                 }}
               >
                 {data?.collaborators?.length}
@@ -96,8 +90,8 @@ export default function MessageLayout({
         <Message
           isLoading={isLoading}
           type={type}
-          // selected={selected}
-          // setSelected={setSelected}
+          theme={theme}
+          socket={socket}
           messages={messages}
           setMessages={setMessages}
           data={data}

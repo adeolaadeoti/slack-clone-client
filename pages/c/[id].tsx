@@ -9,7 +9,14 @@ import { BackgroundImage } from '@mantine/core'
 
 export default function Client() {
   const router = useRouter()
-  const { data: organisationData, conversations, channels } = useAppContext()
+  const {
+    data: organisationData,
+    conversations,
+    channels,
+    setChannels,
+    socket,
+    theme,
+  } = useAppContext()
   const { id } = router.query
 
   const [selected, setSelected] = React.useState<any>()
@@ -55,19 +62,39 @@ export default function Client() {
     }
   )
 
-  // const hasUnread = messages?.some((message: any) => !message.hasRead)
   React.useEffect(() => {
     setChannel(localStorage.getItem('channel') as string)
+
+    // if (channels) {
+    //   const updatedChannels = channels?.map((channel: any) => {
+    //     if (channel._id === id) {
+    //       const updatedHasNotOpen = channel.hasNotOpen.filter(
+    //         (userId: any) => userId !== organisationData?.profile?._id
+    //       )
+    //       return {
+    //         ...channel,
+    //         hasNotOpen: updatedHasNotOpen,
+    //       }
+    //     } else {
+    //       return channel
+    //     }
+    //   })
+    //   setChannels(updatedChannels)
+    //   console.log(organisationData?.profile?._id, updatedChannels?.hasNotOpen)
+    // }
   }, [id])
 
   return (
     <DefaultLayout
       data={organisationData}
+      socket={socket}
       conversations={conversations}
       channels={channels}
+      setChannels={setChannels}
       selected={selected}
       setSelected={setSelected}
       setMessages={setMessages}
+      theme={theme}
       style={{
         position: 'relative',
       }}
@@ -76,8 +103,7 @@ export default function Client() {
         <MessageLayout
           messages={messages}
           setMessages={setMessages}
-          // selected={selected}
-          // setSelected={setSelected}
+          theme={theme}
           type={channel === 'true' ? 'channel' : 'conversation'}
           data={
             channel === 'true'

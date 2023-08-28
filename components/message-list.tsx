@@ -1,18 +1,12 @@
 import { useEffect, useRef } from 'react'
 import React from 'react'
-import {
-  Avatar,
-  Flex,
-  Text,
-  Tooltip,
-  useMantineTheme,
-} from '@mantine/core'
+import { Avatar, Flex, Text, Tooltip } from '@mantine/core'
 import DOMPurify from 'dompurify'
 import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css'
 import { useAppContext } from '../providers/app-provider'
 import { formatDate } from '../utils/helpers'
 
-export default function MessageList({ messages }: any) {
+export default function MessageList({ messages, theme }: any) {
   const { socket } = useAppContext()
   const messageRefs = useRef<Array<HTMLDivElement>>([])
 
@@ -36,7 +30,7 @@ export default function MessageList({ messages }: any) {
     })
 
     socket.on('message-view', async (messageId) => {
-    //   console.log(messageId)
+      //   console.log(messageId)
     })
 
     return () => {
@@ -73,7 +67,7 @@ export default function MessageList({ messages }: any) {
           )}
           <Flex direction="column">
             <Flex align="center" gap="md">
-              <Text fz="sm" fw="bold" c={useMantineTheme().colors.dark[2]} span>
+              <Text fz="sm" fw="bold" c={theme.colors.dark[2]} span>
                 {msg?.sender?.username ?? msg?.username}
               </Text>
               <Tooltip
@@ -81,12 +75,7 @@ export default function MessageList({ messages }: any) {
                 withArrow
                 position="right"
               >
-                <Text
-                  fz="xs"
-                  tt="lowercase"
-                  c={useMantineTheme().colors.dark[3]}
-                  span
-                >
+                <Text fz="xs" tt="lowercase" c={theme.colors.dark[3]} span>
                   {msg?.timeRender ?? formatDate(msg?.createdAt).timeRender}
                 </Text>
               </Tooltip>

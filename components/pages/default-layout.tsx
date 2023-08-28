@@ -9,7 +9,6 @@ import {
   ActionIcon,
   Switch,
   UnstyledButton,
-  useMantineTheme,
   Stack,
   Skeleton,
   Box,
@@ -66,28 +65,54 @@ export default function DefaultLayout({
   children,
   conversations,
   channels,
+  setChannels,
   data,
+  socket,
   selected,
   setSelected,
   setMessages,
+  theme,
 }: any) {
   const router = useRouter()
   const { classes } = useStyles()
 
   function handleChannel(channel: any) {
-    setSelected({})
+    // setSelected({})
+    setSelected(channel)
     router.push(`/c/${channel?._id}`)
     localStorage.setItem('channel', 'true')
-    setSelected(channel)
-    setMessages([])
+    // setMessages([])
   }
   function handleConversation(data: any) {
     setSelected({})
     router.push(`/c/${data?._id}`)
     localStorage.setItem('channel', 'false')
-    setSelected(data)
     setMessages([])
   }
+
+  React.useEffect(() => {
+    if (channels?.length) {
+      const updatedChannels = channels?.map((channel: any) => {
+        if (channel._id === router.query.id) {
+          const updatedHasNotOpen = channel.hasNotOpen.filter(
+            (userId: any) => userId !== data?.profile?._id
+          )
+          return {
+            ...channel,
+            hasNotOpen: updatedHasNotOpen,
+          }
+        } else {
+          return channel
+        }
+      })
+      // console.log(updatedChannels)
+      setChannels(updatedChannels)
+      console.log(data?.profile?._id, updatedChannels)
+    }
+  }, [
+    router.query.id,
+    // channels?.length
+  ])
 
   return (
     <Grid h="100vh" m="0">
@@ -126,11 +151,15 @@ export default function DefaultLayout({
                 style={{
                   transition: 'all .2s ease',
                   borderRadius: 10,
-                  fontWeight: channel?.hasUnreadMessages ? 'bold' : '400',
-                  color: channel?.hasUnreadMessages ? 'white' : '#C1C2C5',
+                  fontWeight: channel?.hasNotOpen?.includes(data?.profile?._id)
+                    ? 'bold'
+                    : '400',
+                  color: channel?.hasNotOpen?.includes(data?.profile?._id)
+                    ? 'white'
+                    : '#C1C2C5',
                   backgroundColor:
                     selected?._id === channel._id
-                      ? useMantineTheme().colors.dark[6]
+                      ? theme.colors.dark[6]
                       : 'transparent',
                 }}
               >
@@ -171,7 +200,7 @@ export default function DefaultLayout({
 
                   backgroundColor:
                     selected?._id === convo._id
-                      ? useMantineTheme().colors.dark[6]
+                      ? theme.colors.dark[6]
                       : 'transparent',
                 }}
               >
@@ -203,7 +232,7 @@ export default function DefaultLayout({
                     }}
                   ></Box>
                 )}
-                <Text fw="100" c={useMantineTheme().colors.dark[3]} span>
+                <Text fw="100" c={theme.colors.dark[3]} span>
                   {convo.isSelf ? 'you' : ''}{' '}
                 </Text>
               </UnstyledButton>
@@ -221,18 +250,12 @@ export default function DefaultLayout({
             )}
             <Switch
               size="xl"
-              color={useMantineTheme().colorScheme === 'dark' ? 'gray' : 'dark'}
+              color={theme.colorScheme === 'dark' ? 'gray' : 'dark'}
               onLabel={
-                <TbHeadphonesOff
-                  size="1.5rem"
-                  color={useMantineTheme().colors.red[4]}
-                />
+                <TbHeadphonesOff size="1.5rem" color={theme.colors.red[4]} />
               }
               offLabel={
-                <TbHeadphones
-                  size="1.5rem"
-                  color={useMantineTheme().colors.blue[6]}
-                />
+                <TbHeadphones size="1.5rem" color={theme.colors.blue[6]} />
               }
             />
           </Navbar.Section>

@@ -7,7 +7,6 @@ import {
   Text,
   ThemeIcon,
   UnstyledButton,
-  useMantineTheme,
 } from '@mantine/core'
 import { EditorState } from 'draft-js'
 import { Editor } from 'react-draft-wysiwyg'
@@ -19,7 +18,14 @@ import { truncateDraftToHtml } from '../utils/helpers'
 import { notifications } from '@mantine/notifications'
 import MessageList from './message-list'
 
-const Message = ({ data, messages, setMessages, isLoading, type }: any) => {
+const Message = ({
+  data,
+  messages,
+  setMessages,
+  isLoading,
+  theme,
+  type,
+}: any) => {
   const { data: organisationData, socket, conversations } = useAppContext()
   const channelCollaborators = data?.collaborators?.map((d: any) => d._id)
   const userId = organisationData?.profile?._id
@@ -29,12 +35,11 @@ const Message = ({ data, messages, setMessages, isLoading, type }: any) => {
     )
   })
 
-  const [editorState, setEditorState] = useState(() =>
-    EditorState.createEmpty()
-  )
+  const [editorState, setEditorState] = useState()
+  // () => EditorState.createEmpty()
   const stackRef = React.useRef<HTMLDivElement | null>(null)
 
-  const handleChange = (newEditorState: EditorState) => {
+  const handleChange = (newEditorState: EditorState | any) => {
     setEditorState(newEditorState)
   }
 
@@ -65,6 +70,7 @@ const Message = ({ data, messages, setMessages, isLoading, type }: any) => {
         })(contentState)
 
         const message = {
+          _id: userId,
           sender: userId,
           username: organisationData?.profile?.username,
           time: new Date().toLocaleString('en-US', {
@@ -83,25 +89,23 @@ const Message = ({ data, messages, setMessages, isLoading, type }: any) => {
           name: organisationData?.profile?.username,
         }
 
-        if (socket.connected) {
-          socket.emit('message', {
-            message,
-            organisation: data?.organisation,
-            ...(data?.isChannel && {
-              channelId: data?._id,
-              channelName: data?.name,
-              collaborators: data?.collaborators,
-            }),
-            ...(data?.isConversation && {
-              conversationId: data?._id,
-              collaborators: data?.collaborators,
-              isSelf:
-                data?.collaborators[0]?._id === data?.collaborators[1]?._id,
-            }),
-          })
-        }
+        socket.emit('message', {
+          message,
+          organisation: data?.organisation,
+          hasNotOpen: data?.collaborators?.filter((c: any) => c._id !== userId),
+          ...(data?.isChannel && {
+            channelId: data?._id,
+            channelName: data?.name,
+            collaborators: data?.collaborators,
+          }),
+          ...(data?.isConversation && {
+            conversationId: data?._id,
+            collaborators: data?.collaborators,
+            isSelf: data?.collaborators[0]?._id === data?.collaborators[1]?._id,
+          }),
+        })
 
-        setEditorState(EditorState.createEmpty())
+        // setEditorState(EditorState.createEmpty())
         returnValue = true
       }
     }
@@ -125,13 +129,22 @@ const Message = ({ data, messages, setMessages, isLoading, type }: any) => {
           return collab._id
         })
 
-        const exists = conversationCollaborators.some(
+        const exists = conversationCollaborators?.some(
           (collaboratorArray: any) =>
             collaboratorArray.every((collaborator: any) =>
               collaboratorsId.includes(collaborator)
             )
         )
         if (organisationData?._id === organisation) {
+          if (collaboratorsId?.includes(userId) && channelName) {
+            notifications.show({
+              title: `${message?.username} #${channelName?.toLowerCase()}`,
+              message: truncateDraftToHtml(message?.content),
+              color: 'green',
+              p: 'md',
+            })
+            return
+          }
           if (exists) {
             notifications.show({
               title: message?.username,
@@ -140,14 +153,6 @@ const Message = ({ data, messages, setMessages, isLoading, type }: any) => {
               p: 'md',
             })
           }
-        }
-        if (collaboratorsId?.includes(userId) && channelName) {
-          notifications.show({
-            title: `${message?.username} #${channelName?.toLowerCase()}`,
-            message: truncateDraftToHtml(message?.content),
-            color: 'green',
-            p: 'md',
-          })
         }
       }
     )
@@ -182,7 +187,7 @@ const Message = ({ data, messages, setMessages, isLoading, type }: any) => {
               p="lg"
               px="0"
               style={{
-                borderBottom: `1px solid ${useMantineTheme().colors.dark[5]}`,
+                borderBottom: `1px solid ${theme.colors.dark[5]}`,
               }}
             >
               {type === 'channel' && (
@@ -207,29 +212,22 @@ const Message = ({ data, messages, setMessages, isLoading, type }: any) => {
                   <>
                     <Text weight="bold" c="white">
                       This is the very first begining of the
-                      <Text span c={useMantineTheme().colors.blue[5]}>
+                      <Text span c={theme.colors.blue[5]}>
                         {' '}
                         #{String(data?.name)?.toLowerCase()}{' '}
                       </Text>{' '}
                       channel
                     </Text>
-                    <Text fz="sm" c={useMantineTheme().colors.dark[2]}>
+                    <Text fz="sm" c={theme.colors.dark[2]}>
                       This channel is for everything{' '}
                       <Text span> #{String(data?.name)?.toLowerCase()} </Text> .
                       Hold meetings, share docs, and make decisions together
                       with your team. &nbsp;
-                      <UnstyledButton
-                        fz="sm"
-                        c={useMantineTheme().colors.blue[5]}
-                      >
+                      <UnstyledButton fz="sm" c={theme.colors.blue[5]}>
                         Edit description
                       </UnstyledButton>
                     </Text>
-                    <UnstyledButton
-                      mt="lg"
-                      fz="sm"
-                      c={useMantineTheme().colors.blue[5]}
-                    >
+                    <UnstyledButton mt="lg" fz="sm" c={theme.colors.blue[5]}>
                       <Flex align="center" justify="start" gap="xs">
                         <BiUserPlus size="2.2rem" />
                         <Text>Add people</Text>
@@ -244,7 +242,7 @@ const Message = ({ data, messages, setMessages, isLoading, type }: any) => {
                         <Text weight="bold" c="white">
                           This space is just for you.
                         </Text>
-                        <Text fz="sm" c={useMantineTheme().colors.dark[2]}>
+                        <Text fz="sm" c={theme.colors.dark[2]}>
                           Jot down notes, list your to-dos, or keep links and
                           files handy. You can also talk to yourself here, but
                           please bear in mind you’ll have to supply both sides
@@ -253,7 +251,7 @@ const Message = ({ data, messages, setMessages, isLoading, type }: any) => {
                         <UnstyledButton
                           mt="lg"
                           fz="sm"
-                          c={useMantineTheme().colors.blue[5]}
+                          c={theme.colors.blue[5]}
                         >
                           <Flex align="center" justify="start" gap="xs">
                             <BiEditAlt size="2rem" />
@@ -265,26 +263,23 @@ const Message = ({ data, messages, setMessages, isLoading, type }: any) => {
                       <>
                         <Text weight="bold" c="white">
                           This conversation is just between
-                          <Text span c={useMantineTheme().colors.blue[5]}>
+                          <Text span c={theme.colors.blue[5]}>
                             {' '}
                             @{String(data?.name)?.toLowerCase()}{' '}
                           </Text>{' '}
                           and you.
                         </Text>
-                        <Text fz="sm" c={useMantineTheme().colors.dark[2]}>
+                        <Text fz="sm" c={theme.colors.dark[2]}>
                           Hold meetings, share docs, and make decisions together
                           with your team. &nbsp;
-                          <UnstyledButton
-                            fz="sm"
-                            c={useMantineTheme().colors.blue[5]}
-                          >
+                          <UnstyledButton fz="sm" c={theme.colors.blue[5]}>
                             Edit description
                           </UnstyledButton>
                         </Text>
                         <UnstyledButton
                           mt="lg"
                           fz="sm"
-                          c={useMantineTheme().colors.blue[5]}
+                          c={theme.colors.blue[5]}
                         >
                           <Flex align="center" justify="start" gap="xs">
                             <BiUserPlus size="2.2rem" />
@@ -299,7 +294,9 @@ const Message = ({ data, messages, setMessages, isLoading, type }: any) => {
             </Flex>
           </>
         )}
-        {messages?.length >= 1 && <MessageList messages={messages} />}
+        {messages?.length >= 1 && (
+          <MessageList theme={theme} messages={messages} />
+        )}
       </Stack>
 
       {!data?.isChannel && (

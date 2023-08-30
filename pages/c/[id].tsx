@@ -21,18 +21,21 @@ export default function Client() {
   const [selected, setSelected] = React.useState<any>()
   const [channel, setChannel] = React.useState('')
   const [messages, setMessages] = React.useState<any>([])
+  const [messagesLoading, setMessagesLoading] = React.useState(false)
 
   const query = useQuery([`channel/${id}`], () => axios.get(`/channel/${id}`), {
     enabled: channel === 'true',
     onSuccess: async (data) => {
-      if (channel === 'true') {
+      if (channel === 'true' && !query.isRefetching) {
         setSelected(data?.data?.data)
+        setMessagesLoading(true)
         const res = await axios.get(`/messages`, {
           params: {
             channelId: data?.data?.data?._id,
             organisation: organisationData?._id,
           },
         })
+        setMessagesLoading(false)
         setMessages(res?.data?.data)
       }
     },
@@ -44,8 +47,9 @@ export default function Client() {
     {
       enabled: channel === 'false',
       onSuccess: async (data) => {
-        if (channel === 'false') {
+        if (channel === 'false' && !convoQuery.isRefetching) {
           setSelected(data?.data?.data)
+          setMessagesLoading(true)
           try {
             const res = await axios.get(`/messages`, {
               params: {
@@ -54,6 +58,7 @@ export default function Client() {
                 isSelf: data?.data?.data?.isSelf,
               },
             })
+            setMessagesLoading(false)
             setMessages(res?.data?.data)
           } catch (error) {}
         }
@@ -81,6 +86,7 @@ export default function Client() {
     >
       <BackgroundImage h="100vh" src="/bg-chat.png">
         <MessageLayout
+          messagesLoading={messagesLoading}
           messages={messages}
           setMessages={setMessages}
           theme={theme}

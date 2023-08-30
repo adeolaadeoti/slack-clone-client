@@ -11,6 +11,7 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: 0,
+      // refetchOnWindowFocus: false,
     },
   },
 })
@@ -27,6 +28,7 @@ export default function App(props: AppProps) {
           content="minimum-scale=1, initial-scale=1, width=device-width"
         />
       </Head>
+
       <AppContextProvider>
         <MantineProvider
           withGlobalStyles

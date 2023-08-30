@@ -121,7 +121,7 @@ export default function DefaultLayout({
                 w="100%"
                 px="sm"
                 onClick={() => handleChannel(channel)}
-                key={channel._id}
+                key={channel?._id}
                 className={classes.collectionLink}
                 style={{
                   transition: 'all .2s ease',
@@ -133,7 +133,7 @@ export default function DefaultLayout({
                     ? 'white'
                     : '#C1C2C5',
                   backgroundColor:
-                    selected?._id === channel._id
+                    selected?._id === channel?._id
                       ? theme.colors.dark[6]
                       : 'transparent',
                 }}

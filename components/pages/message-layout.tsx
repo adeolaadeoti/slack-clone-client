@@ -10,6 +10,7 @@ const Message = dynamic(() => import('../message'), {
 export default function MessageLayout({
   data,
   type,
+  messagesLoading,
   messages,
   setMessages,
   theme,
@@ -89,6 +90,7 @@ export default function MessageLayout({
       {data && (
         <Message
           isLoading={isLoading}
+          messagesLoading={messagesLoading}
           type={type}
           theme={theme}
           socket={socket}

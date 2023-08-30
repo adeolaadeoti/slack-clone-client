@@ -1,7 +1,16 @@
 import { useQuery } from '@tanstack/react-query'
 import React, { createContext, useContext, useState } from 'react'
 import axios from '../services/axios'
-import { LoadingOverlay, MantineTheme, useMantineTheme } from '@mantine/core'
+import {
+  Center,
+  Flex,
+  Loader,
+  LoadingOverlay,
+  MantineTheme,
+  Skeleton,
+  Stack,
+  useMantineTheme,
+} from '@mantine/core'
 import io, { Socket } from 'socket.io-client'
 import { useRouter } from 'next/router'
 const socket = io('http://localhost:3000')
@@ -104,7 +113,6 @@ export const AppContextProvider = ({ children }: any) => {
       socket.on('convo-updated', (updatedConversations) => {
         const conversations = data?.conversations?.map((c: any) => {
           if (c._id === id) {
-            console.log(updatedConversations.hasNotOpen)
             return {
               ...c,
               hasNotOpen: updatedConversations.hasNotOpen,
@@ -123,7 +131,23 @@ export const AppContextProvider = ({ children }: any) => {
     }
   }, [data, id])
 
-  if (query.isLoading) return <LoadingOverlay visible />
+  if (query.isLoading)
+    return (
+      <Center p="xl" h="100vh" w="100vw" bg={theme.colors.dark[9]}>
+        <Flex gap={10} align="center" w="30%" mx="auto">
+          <Skeleton className="page-skeleton" height={50} width={50} circle />
+          <Stack spacing="xs" w="80%">
+            <Skeleton className="page-skeleton" height={15} radius="xl" />
+            <Skeleton
+              className="page-skeleton"
+              height={15}
+              w="80%"
+              radius="xl"
+            />
+          </Stack>
+        </Flex>
+      </Center>
+    )
 
   return (
     <AppContext.Provider

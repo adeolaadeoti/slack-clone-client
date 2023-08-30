@@ -1,14 +1,56 @@
 import { useEffect, useRef } from 'react'
 import React from 'react'
-import { Avatar, Flex, Text, Tooltip } from '@mantine/core'
+import {
+  Avatar,
+  Flex,
+  Text,
+  Tooltip,
+  createStyles,
+  getStylesRef,
+} from '@mantine/core'
 import DOMPurify from 'dompurify'
 import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css'
 import { useAppContext } from '../providers/app-provider'
 import { formatDate } from '../utils/helpers'
+import { LuReplyAll } from 'react-icons/lu'
+
+const useStyles = createStyles((theme) => ({
+  message: {
+    padding: theme.spacing.sm,
+    position: 'relative',
+    '&:hover': {
+      backgroundColor: theme.colors.dark[7],
+      [`& .${getStylesRef('actions')}`]: {
+        display: 'flex !important',
+      },
+    },
+  },
+  actions: {
+    ref: getStylesRef('actions'),
+    display: 'none !important',
+    position: 'absolute',
+    right: 0,
+    top: -20,
+    borderRadius: theme.radius.md,
+    padding: theme.spacing.xs,
+    backgroundColor: theme.colors.dark[8],
+    border: `1px solid ${theme.colors.dark[4]}`,
+    '& > *': {
+      cursor: 'pointer',
+      paddingInline: theme.spacing.sm,
+      paddingBlock: theme.spacing.xs,
+      borderRadius: theme.radius.md,
+      '&:hover': {
+        backgroundColor: theme.colors.dark[5],
+      },
+    },
+  },
+}))
 
 export default function MessageList({ messages, theme }: any) {
   const { socket } = useAppContext()
   const messageRefs = useRef<Array<HTMLDivElement>>([])
+  const { classes } = useStyles()
 
   useEffect(() => {
     const observer = new IntersectionObserver((entries) => {
@@ -34,7 +76,6 @@ export default function MessageList({ messages, theme }: any) {
     })
 
     return () => {
-      // Disconnect the observer when the component unmounts
       observer.disconnect()
     }
   }, [messages])
@@ -43,8 +84,8 @@ export default function MessageList({ messages, theme }: any) {
     <>
       {messages?.map((msg: any) => (
         <Flex
+          className={classes.message}
           gap="sm"
-          align="center"
           key={msg?._id}
           data-message-id={msg._id}
           data-message-seen={msg.hasRead}
@@ -52,22 +93,47 @@ export default function MessageList({ messages, theme }: any) {
             messageRefs.current.push(element)
           }}
         >
+          <Flex className={classes.actions} gap="xs" align="center">
+            <Tooltip label="completed" withArrow position="top">
+              <Text fz="md" tt="lowercase" c={theme.colors.dark[3]} span>
+                ✅
+              </Text>
+            </Tooltip>
+            <Tooltip label="taking a look" withArrow position="top">
+              <Text fz="md" tt="lowercase" c={theme.colors.dark[3]} span>
+                👀
+              </Text>
+            </Tooltip>
+            <Tooltip label="nicely done" withArrow position="top">
+              <Text fz="md" tt="lowercase" c={theme.colors.dark[3]} span>
+                👍
+              </Text>
+            </Tooltip>
+            <Tooltip label="reply in thread" withArrow position="top">
+              <Flex align="flex-start" gap="xs">
+                <LuReplyAll color={theme.colors.dark[1]} />
+                <Text fz="xs" fw="bold" c={theme.colors.dark[1]}>
+                  Reply
+                </Text>
+              </Flex>
+            </Tooltip>
+          </Flex>
           {msg?.username ? (
             <Avatar
               src={`/avatars/${msg?.username?.[0].toLowerCase()}.png`}
-              size="xl"
-              radius="xl"
+              size="lg"
+              radius="lg"
             />
           ) : (
             <Avatar
               src={`/avatars/${msg?.sender?.username?.[0].toLowerCase()}.png`}
-              size="xl"
-              radius="xl"
+              size="lg"
+              radius="lg"
             />
           )}
           <Flex direction="column">
             <Flex align="center" gap="md">
-              <Text fz="sm" fw="bold" c={theme.colors.dark[2]} span>
+              <Text fz="sm" fw="bold" c="white" span>
                 {msg?.sender?.username ?? msg?.username}
               </Text>
               <Tooltip

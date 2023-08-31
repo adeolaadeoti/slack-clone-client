@@ -73,23 +73,8 @@ const Message = ({
         })(contentState)
 
         const message = {
-          _id: userId,
           sender: userId,
-          username: organisationData?.profile?.username,
-          time: new Date().toLocaleString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            hour: 'numeric',
-            minute: 'numeric',
-            second: 'numeric',
-          }),
-          timeRender: new Date().toLocaleString('en-US', {
-            hour: 'numeric',
-            minute: 'numeric',
-            hour12: true,
-          }),
           content: htmlContent,
-          name: organisationData?.profile?.username,
         }
 
         socket.emit('message', {
@@ -118,12 +103,12 @@ const Message = ({
   }
 
   React.useEffect(() => {
-    socket.on('message', ({ collaborators, message }) => {
+    socket.on('message', ({ collaborators, newMessage }) => {
       if (
         collaborators?.includes(userId) ||
         channelCollaborators?.includes(userId)
       ) {
-        setMessages((prevMessages: any) => [...prevMessages, message])
+        setMessages((prevMessages: any) => [...prevMessages, newMessage])
       }
     })
 
@@ -295,7 +280,7 @@ const Message = ({
         {messagesLoading ? (
           <Loader color={theme.colors.dark[1]} mt="md" />
         ) : (
-          <MessageList theme={theme} messages={messages} />
+          <MessageList userId={userId} theme={theme} messages={messages} />
         )}
       </Stack>
 

@@ -57,3 +57,16 @@ export function truncateDraftToHtml(content: string) {
     ? sanitizedContent.slice(0, maxLength) + '...'
     : sanitizedContent
 }
+
+// Generate a random number between min and max
+function getRandomNumber(min: number, max: number): number {
+  return Math.floor(Math.random() * (max - min + 1)) + min
+}
+
+// Generate a random _id using timestamps and a 12-digit random number
+export function generateRandomId(): string {
+  const timestamp = Date.now() // Current timestamp in milliseconds
+  const randomPart = getRandomNumber(100000000000, 999999999999) // Random 12-digit number
+
+  return `${timestamp}${randomPart}`
+}

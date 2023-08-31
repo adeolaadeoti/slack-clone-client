@@ -26,7 +26,7 @@ export default function Client() {
   const query = useQuery([`channel/${id}`], () => axios.get(`/channel/${id}`), {
     enabled: channel === 'true',
     onSuccess: async (data) => {
-      if (channel === 'true' && !query.isRefetching) {
+      if (channel === 'true') {
         setSelected(data?.data?.data)
         setMessagesLoading(true)
         const res = await axios.get(`/messages`, {
@@ -47,7 +47,7 @@ export default function Client() {
     {
       enabled: channel === 'false',
       onSuccess: async (data) => {
-        if (channel === 'false' && !convoQuery.isRefetching) {
+        if (channel === 'false') {
           setSelected(data?.data?.data)
           setMessagesLoading(true)
           try {

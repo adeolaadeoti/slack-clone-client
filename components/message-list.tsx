@@ -45,12 +45,35 @@ const useStyles = createStyles((theme) => ({
       },
     },
   },
+  reaction: {
+    color: theme.colors.dark[1],
+    paddingInline: theme.spacing.sm,
+    paddingBlock: theme.spacing.xs,
+    cursor: 'pointer',
+    borderRadius: 10,
+    border: `1px solid ${theme.colors.dark[5]}`,
+    transition: 'all .2s ease',
+    '&:hover': {
+      backgroundColor: theme.colors.dark[5],
+    },
+  },
 }))
 
-export default function MessageList({ messages, theme }: any) {
+export default function MessageList({ userId, messages, theme }: any) {
   const { socket } = useAppContext()
   const messageRefs = useRef<Array<HTMLDivElement>>([])
   const { classes } = useStyles()
+
+  const [reactions, setReactions] = React.useState([
+    {
+      emoji: '',
+      reactedToBy: [{ sender: '' }],
+    },
+  ])
+
+  function handleReaction(emoji: string, id: string) {
+    socket.emit('reaction', { emoji, id, userId })
+  }
 
   useEffect(() => {
     const observer = new IntersectionObserver((entries) => {
@@ -94,17 +117,32 @@ export default function MessageList({ messages, theme }: any) {
           }}
         >
           <Flex className={classes.actions} gap="xs" align="center">
-            <Tooltip label="completed" withArrow position="top">
+            <Tooltip
+              label="Completed"
+              withArrow
+              position="top"
+              onClick={() => handleReaction('✅', msg._id)}
+            >
               <Text fz="md" tt="lowercase" c={theme.colors.dark[3]} span>
                 ✅
               </Text>
             </Tooltip>
-            <Tooltip label="taking a look" withArrow position="top">
+            <Tooltip
+              label="Taking a look"
+              withArrow
+              position="top"
+              onClick={() => handleReaction('👀', msg._id)}
+            >
               <Text fz="md" tt="lowercase" c={theme.colors.dark[3]} span>
                 👀
               </Text>
             </Tooltip>
-            <Tooltip label="nicely done" withArrow position="top">
+            <Tooltip
+              label="Nicely done"
+              withArrow
+              position="top"
+              onClick={() => handleReaction('👍', msg._id)}
+            >
               <Text fz="md" tt="lowercase" c={theme.colors.dark[3]} span>
                 👍
               </Text>
@@ -118,19 +156,11 @@ export default function MessageList({ messages, theme }: any) {
               </Flex>
             </Tooltip>
           </Flex>
-          {msg?.username ? (
-            <Avatar
-              src={`/avatars/${msg?.username?.[0].toLowerCase()}.png`}
-              size="lg"
-              radius="lg"
-            />
-          ) : (
-            <Avatar
-              src={`/avatars/${msg?.sender?.username?.[0].toLowerCase()}.png`}
-              size="lg"
-              radius="lg"
-            />
-          )}
+          <Avatar
+            src={`/avatars/${msg?.sender?.username?.[0].toLowerCase()}.png`}
+            size="lg"
+            radius="lg"
+          />
           <Flex direction="column">
             <Flex align="center" gap="md">
               <Text fz="sm" fw="bold" c="white" span>
@@ -154,6 +184,39 @@ export default function MessageList({ messages, theme }: any) {
                 }),
               }}
             />
+            <Flex align="center" gap="sm">
+              {msg.reactions?.map((reaction: any) => {
+                const reactionsFrom = reaction.reactedToBy.map(
+                  (user: any) => user.username
+                )
+
+                return (
+                  <Tooltip
+                    label={reactionsFrom?.join(', ')}
+                    withArrow
+                    position="top"
+                  >
+                    <Text
+                      role="button"
+                      fz="xs"
+                      tt="lowercase"
+                      className={classes.reaction}
+                      span
+                      onClick={() => handleReaction(reaction.emoji, msg._id)}
+                      style={{
+                        backgroundColor: reaction.reactedToBy.some(
+                          (user: any) => user._id === userId
+                        )
+                          ? theme.colors.dark[5]
+                          : 'transparent',
+                      }}
+                    >
+                      {reaction?.emoji} &nbsp; {reaction?.reactedToBy?.length}
+                    </Text>
+                  </Tooltip>
+                )
+              })}
+            </Flex>
           </Flex>
         </Flex>
       ))}

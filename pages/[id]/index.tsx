@@ -21,7 +21,7 @@ const Onboarding: NextPage = () => {
   const router = useRouter()
   const { id } = router.query
   const query = useQuery(
-    ['organisation'],
+    ['organisation', id],
     () => axios.get(`/organisation/${id}`),
     {
       enabled: !!id,

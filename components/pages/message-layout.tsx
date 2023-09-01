@@ -19,7 +19,13 @@ export default function MessageLayout({
   const isLoading = !data?.name
 
   return (
-    <Flex direction="column" justify="space-between">
+    <Flex
+      direction="column"
+      justify="space-between"
+      style={{
+        position: 'relative',
+      }}
+    >
       <Flex
         bg={theme.colors.dark[7]}
         py={data?.isOwner ? '1.85rem' : '1rem'}

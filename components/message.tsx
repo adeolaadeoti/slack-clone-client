@@ -29,7 +29,12 @@ const Message = ({
   type,
   isThread = false,
 }: any) => {
-  const { data: organisationData, socket, conversations } = useAppContext()
+  const {
+    data: organisationData,
+    socket,
+    conversations,
+    selected,
+  } = useAppContext()
   const channelCollaborators = data?.collaborators?.map((d: any) => d._id)
   const userId = organisationData?.profile?._id
   const conversationCollaborators = conversations?.map((conversation: any) => {
@@ -171,15 +176,13 @@ const Message = ({
     }
   }, [messages])
 
-  // console.log(isThread)
-
   return (
     <>
       <Stack
         p="lg"
         ref={stackRef}
         style={{
-          height: isThread ? '66vh' : '78vh',
+          height: isThread ? '68.5vh' : '78vh',
           overflowY: 'scroll',
           gap: '0',
         }}
@@ -310,7 +313,7 @@ const Message = ({
           <Editor
             placeholder={`Message ${
               data?.isChannel ? '#' : ''
-            }${data?.name?.toLowerCase()}`}
+            }${selected?.name?.toLowerCase()}`}
             editorState={editorState}
             toolbarClassName="toolbarClassName"
             wrapperClassName="wrapperClassName"
@@ -320,7 +323,7 @@ const Message = ({
             toolbar={{
               options: ['inline', 'link', 'list', 'emoji'],
               inline: {
-                options: ['bold', 'italic', 'strikethrough'],
+                options: ['bold', 'italic'],
                 className: 'inline-style',
                 bold: { icon: '/bold.svg' },
               },

@@ -84,10 +84,9 @@ export default function Thread() {
   const userId = data?.profile?._id
 
   const query = useQuery(
-    [`messages/${threadId}`],
+    [`messages`, threadId],
     () => axios.get(`/messages/${threadId}`),
     {
-      // enabled: !id,
       onSuccess: async (data) => {},
     }
   )
@@ -121,105 +120,107 @@ export default function Thread() {
         />
       </Flex>
 
-      <Flex className={classes.message} gap="sm">
-        <Flex className={classes.actions} gap="xs" align="center">
-          <Tooltip
-            label="Completed"
-            withArrow
-            position="top"
-            onClick={() => handleReaction('✅', selectedMessage._id)}
-          >
-            <Text fz="md" tt="lowercase" c={theme.colors.dark[3]} span>
-              ✅
-            </Text>
-          </Tooltip>
-          <Tooltip
-            label="Taking a look"
-            withArrow
-            position="top"
-            onClick={() => handleReaction('👀', selectedMessage._id)}
-          >
-            <Text fz="md" tt="lowercase" c={theme.colors.dark[3]} span>
-              👀
-            </Text>
-          </Tooltip>
-          <Tooltip
-            label="Nicely done"
-            withArrow
-            position="top"
-            onClick={() => handleReaction('👍', selectedMessage._id)}
-          >
-            <Text fz="md" tt="lowercase" c={theme.colors.dark[3]} span>
-              👍
-            </Text>
-          </Tooltip>
-        </Flex>
-        <Avatar
-          src={`/avatars/${selectedMessage?.sender?.username?.[0].toLowerCase()}.png`}
-          size="lg"
-          radius="lg"
-        />
-        <Flex direction="column">
-          <Flex align="center" gap="md">
-            <Text fz="sm" fw="bold" c="white" span>
-              {selectedMessage?.sender?.username ?? selectedMessage?.username}
-            </Text>
+      {!query.isLoading && (
+        <Flex className={classes.message} gap="sm">
+          <Flex className={classes.actions} gap="xs" align="center">
             <Tooltip
-              label={formatDate(selectedMessage?.createdAt)?.time}
+              label="Completed"
               withArrow
-              position="right"
+              position="top"
+              onClick={() => handleReaction('✅', selectedMessage._id)}
             >
-              <Text fz="xs" tt="lowercase" c={theme.colors.dark[3]} span>
-                {formatDate(selectedMessage?.createdAt)?.timeRender}
+              <Text fz="md" tt="lowercase" c={theme.colors.dark[3]} span>
+                ✅
+              </Text>
+            </Tooltip>
+            <Tooltip
+              label="Taking a look"
+              withArrow
+              position="top"
+              onClick={() => handleReaction('👀', selectedMessage._id)}
+            >
+              <Text fz="md" tt="lowercase" c={theme.colors.dark[3]} span>
+                👀
+              </Text>
+            </Tooltip>
+            <Tooltip
+              label="Nicely done"
+              withArrow
+              position="top"
+              onClick={() => handleReaction('👍', selectedMessage._id)}
+            >
+              <Text fz="md" tt="lowercase" c={theme.colors.dark[3]} span>
+                👍
               </Text>
             </Tooltip>
           </Flex>
-          <div
-            className="chat-wrapper"
-            dangerouslySetInnerHTML={{
-              __html: DOMPurify.sanitize(selectedMessage?.content, {
-                ADD_ATTR: ['target'],
-              }),
-            }}
+          <Avatar
+            src={`/avatars/${selectedMessage?.sender?.username?.[0].toLowerCase()}.png`}
+            size="lg"
+            radius="lg"
           />
-          <Flex align="center" gap="sm">
-            {selectedMessage?.reactions?.map((reaction: any) => {
-              const reactionsFrom = reaction.reactedToBy.map(
-                (user: any) => user.username
-              )
+          <Flex direction="column">
+            <Flex align="center" gap="md">
+              <Text fz="sm" fw="bold" c="white" span>
+                {selectedMessage?.sender?.username ?? selectedMessage?.username}
+              </Text>
+              <Tooltip
+                label={formatDate(selectedMessage?.createdAt)?.time}
+                withArrow
+                position="right"
+              >
+                <Text fz="xs" tt="lowercase" c={theme.colors.dark[3]} span>
+                  {formatDate(selectedMessage?.createdAt)?.timeRender}
+                </Text>
+              </Tooltip>
+            </Flex>
+            <div
+              className="chat-wrapper"
+              dangerouslySetInnerHTML={{
+                __html: DOMPurify.sanitize(selectedMessage?.content, {
+                  ADD_ATTR: ['target'],
+                }),
+              }}
+            />
+            <Flex align="center" gap="sm">
+              {selectedMessage?.reactions?.map((reaction: any) => {
+                const reactionsFrom = reaction.reactedToBy.map(
+                  (user: any) => user.username
+                )
 
-              return (
-                <Tooltip
-                  label={reactionsFrom?.join(', ')}
-                  withArrow
-                  position="top"
-                  key={reaction._id}
-                >
-                  <Text
-                    role="button"
-                    fz="xs"
-                    tt="lowercase"
-                    className={classes.reaction}
-                    span
-                    onClick={() =>
-                      handleReaction(reaction?.emoji, selectedMessage?._id)
-                    }
-                    style={{
-                      backgroundColor: reaction?.reactedToBy?.some(
-                        (user: any) => user?._id === userId
-                      )
-                        ? theme.colors.dark[5]
-                        : 'transparent',
-                    }}
+                return (
+                  <Tooltip
+                    label={reactionsFrom?.join(', ')}
+                    withArrow
+                    position="top"
+                    key={reaction._id}
                   >
-                    {reaction?.emoji} &nbsp;{reaction?.reactedToBy?.length}
-                  </Text>
-                </Tooltip>
-              )
-            })}
+                    <Text
+                      role="button"
+                      fz="xs"
+                      tt="lowercase"
+                      className={classes.reaction}
+                      span
+                      onClick={() =>
+                        handleReaction(reaction?.emoji, selectedMessage?._id)
+                      }
+                      style={{
+                        backgroundColor: reaction?.reactedToBy?.some(
+                          (user: any) => user?._id === userId
+                        )
+                          ? theme.colors.dark[5]
+                          : 'transparent',
+                      }}
+                    >
+                      {reaction?.emoji} &nbsp;{reaction?.reactedToBy?.length}
+                    </Text>
+                  </Tooltip>
+                )
+              })}
+            </Flex>
           </Flex>
         </Flex>
-      </Flex>
+      )}
 
       <Message isThread />
     </Conversation>

@@ -76,14 +76,12 @@ export default function DefaultLayout({
   const { classes } = useStyles()
 
   function handleChannel(channel: any) {
-    // setSelected({})
     setSelected(channel)
     router.push(`/c/${channel?._id}`)
     localStorage.setItem('channel', 'true')
     // setMessages([])
   }
   function handleConversation(data: any) {
-    // setSelected({})
     setSelected(data)
     router.push(`/c/${data?._id}`)
     localStorage.setItem('channel', 'false')
@@ -166,7 +164,7 @@ export default function DefaultLayout({
                 w="100%"
                 px="sm"
                 onClick={() => handleConversation(convo)}
-                key={convo._id}
+                key={convo?._id}
                 className={classes.collectionLink}
                 style={{
                   transition: 'all .2s ease',
@@ -251,7 +249,6 @@ export default function DefaultLayout({
           p="0"
           style={{
             borderLeft: `1px solid ${theme.colors.dark[5]}`,
-            // height: '100vh',
           }}
         >
           {thread}

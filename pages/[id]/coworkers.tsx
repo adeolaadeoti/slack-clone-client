@@ -33,7 +33,8 @@ const Coworkers: NextPage = () => {
   const [isDisabled, setIsDisabled] = React.useState(true)
 
   const query = useQuery(
-    ['organisation-coworkers'],
+    ['organisation', id],
+    // ['organisation-coworkers'],
     () => axios.get(`/organisation/${id}`),
     {
       enabled: !!id,

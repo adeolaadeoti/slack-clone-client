@@ -28,23 +28,25 @@ interface FormattedDate {
   timeRender: string
 }
 
-export function formatDate(dateString: string): FormattedDate {
-  const options: Intl.DateTimeFormatOptions = {
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: 'numeric',
-    second: 'numeric',
-  }
+export function formatDate(dateString: string): FormattedDate | any {
+  if (dateString) {
+    const options: Intl.DateTimeFormatOptions = {
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: 'numeric',
+      second: 'numeric',
+    }
 
-  const date = new Date(dateString)
-  const formattedTime = new Intl.DateTimeFormat('en-US', options).format(date)
-  const timeParts = formattedTime.split(', ')
-  const timeRender = timeParts[1].replace(/:\d+\s/, ' ')
+    const date = new Date(dateString)
+    const formattedTime = new Intl.DateTimeFormat('en-US', options).format(date)
+    const timeParts = formattedTime.split(', ')
+    const timeRender = timeParts[1].replace(/:\d+\s/, ' ')
 
-  return {
-    time: formattedTime.replace(',', ' @ '),
-    timeRender: timeRender,
+    return {
+      time: formattedTime.replace(',', ' @ '),
+      timeRender: timeRender,
+    }
   }
 }
 

@@ -1,13 +1,13 @@
 import { useRouter } from 'next/router'
 import React from 'react'
-import DefaultLayout from '../../components/pages/default-layout'
-import MessageLayout from '../../components/pages/message-layout'
+import DefaultLayout from '../../../components/pages/default-layout'
+import MessageLayout from '../../../components/pages/message-layout'
 import { useQuery } from '@tanstack/react-query'
-import axios from '../../services/axios'
-import { useAppContext } from '../../providers/app-provider'
+import axios from '../../../services/axios'
+import { useAppContext } from '../../../providers/app-provider'
 import { BackgroundImage } from '@mantine/core'
 
-export default function Client() {
+export default function Conversation({ children }: any) {
   const router = useRouter()
   const {
     data: organisationData,
@@ -15,12 +15,14 @@ export default function Client() {
     channels,
     socket,
     theme,
+    messages,
+    setMessages,
+    selected,
+    setSelected,
   } = useAppContext()
   const { id } = router.query
 
-  const [selected, setSelected] = React.useState<any>()
   const [channel, setChannel] = React.useState('')
-  const [messages, setMessages] = React.useState<any>([])
   const [messagesLoading, setMessagesLoading] = React.useState(false)
 
   const query = useQuery([`channel/${id}`], () => axios.get(`/channel/${id}`), {
@@ -28,7 +30,7 @@ export default function Client() {
     onSuccess: async (data) => {
       if (channel === 'true') {
         setSelected(data?.data?.data)
-        setMessagesLoading(true)
+        // setMessagesLoading(true)
         const res = await axios.get(`/messages`, {
           params: {
             channelId: data?.data?.data?._id,
@@ -49,7 +51,7 @@ export default function Client() {
       onSuccess: async (data) => {
         if (channel === 'false') {
           setSelected(data?.data?.data)
-          setMessagesLoading(true)
+          // setMessagesLoading(true)
           try {
             const res = await axios.get(`/messages`, {
               params: {
@@ -68,7 +70,21 @@ export default function Client() {
 
   React.useEffect(() => {
     setChannel(localStorage.getItem('channel') as string)
-  }, [id])
+
+    socket.on('message-updated', ({ id, message }) => {
+      const newMessages = messages.map((msg: any) => {
+        if (msg._id == id) {
+          return message
+        }
+        return msg
+      })
+      setMessages(newMessages)
+    })
+
+    return () => {
+      socket.off('message-updated')
+    }
+  }, [id, messages])
 
   return (
     <DefaultLayout
@@ -83,8 +99,15 @@ export default function Client() {
       style={{
         position: 'relative',
       }}
+      thread={children}
     >
-      <BackgroundImage h="100vh" src="/bg-chat.png">
+      <BackgroundImage
+        h="100vh"
+        src="/bg-chat.png"
+        style={{
+          position: 'relative',
+        }}
+      >
         <MessageLayout
           messagesLoading={messagesLoading}
           messages={messages}

@@ -13,6 +13,7 @@ import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css'
 import { useAppContext } from '../providers/app-provider'
 import { formatDate } from '../utils/helpers'
 import { LuReplyAll } from 'react-icons/lu'
+import { useRouter } from 'next/router'
 
 const useStyles = createStyles((theme) => ({
   message: {
@@ -63,13 +64,7 @@ export default function MessageList({ userId, messages, theme }: any) {
   const { socket } = useAppContext()
   const messageRefs = useRef<Array<HTMLDivElement>>([])
   const { classes } = useStyles()
-
-  const [reactions, setReactions] = React.useState([
-    {
-      emoji: '',
-      reactedToBy: [{ sender: '' }],
-    },
-  ])
+  const router = useRouter()
 
   function handleReaction(emoji: string, id: string) {
     socket.emit('reaction', { emoji, id, userId })
@@ -147,7 +142,12 @@ export default function MessageList({ userId, messages, theme }: any) {
                 👍
               </Text>
             </Tooltip>
-            <Tooltip label="reply in thread" withArrow position="top">
+            <Tooltip
+              label="Reply in thread"
+              withArrow
+              position="top"
+              onClick={() => router.push(`/c/${router.query.id}/t/${msg._id}`)}
+            >
               <Flex align="flex-start" gap="xs">
                 <LuReplyAll color={theme.colors.dark[1]} />
                 <Text fz="xs" fw="bold" c={theme.colors.dark[1]}>
@@ -195,6 +195,7 @@ export default function MessageList({ userId, messages, theme }: any) {
                     label={reactionsFrom?.join(', ')}
                     withArrow
                     position="top"
+                    key={reaction._id}
                   >
                     <Text
                       role="button"
@@ -202,16 +203,16 @@ export default function MessageList({ userId, messages, theme }: any) {
                       tt="lowercase"
                       className={classes.reaction}
                       span
-                      onClick={() => handleReaction(reaction.emoji, msg._id)}
+                      onClick={() => handleReaction(reaction?.emoji, msg?._id)}
                       style={{
-                        backgroundColor: reaction.reactedToBy.some(
-                          (user: any) => user._id === userId
+                        backgroundColor: reaction?.reactedToBy?.some(
+                          (user: any) => user?._id === userId
                         )
                           ? theme.colors.dark[5]
                           : 'transparent',
                       }}
                     >
-                      {reaction?.emoji} &nbsp; {reaction?.reactedToBy?.length}
+                      {reaction?.emoji} &nbsp;{reaction?.reactedToBy?.length}
                     </Text>
                   </Tooltip>
                 )

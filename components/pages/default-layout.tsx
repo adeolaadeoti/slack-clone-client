@@ -70,6 +70,7 @@ export default function DefaultLayout({
   setSelected,
   setMessages,
   theme,
+  thread,
 }: any) {
   const router = useRouter()
   const { classes } = useStyles()
@@ -79,14 +80,14 @@ export default function DefaultLayout({
     setSelected(channel)
     router.push(`/c/${channel?._id}`)
     localStorage.setItem('channel', 'true')
-    setMessages([])
+    // setMessages([])
   }
   function handleConversation(data: any) {
     // setSelected({})
     setSelected(data)
     router.push(`/c/${data?._id}`)
     localStorage.setItem('channel', 'false')
-    setMessages([])
+    // setMessages([])
   }
 
   return (
@@ -244,6 +245,18 @@ export default function DefaultLayout({
       <Grid.Col span="auto" p="0">
         {children}
       </Grid.Col>
+      {thread && (
+        <Grid.Col
+          span={3}
+          p="0"
+          style={{
+            borderLeft: `1px solid ${theme.colors.dark[5]}`,
+            // height: '100vh',
+          }}
+        >
+          {thread}
+        </Grid.Col>
+      )}
     </Grid>
   )
 }

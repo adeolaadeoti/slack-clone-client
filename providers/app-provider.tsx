@@ -27,6 +27,10 @@ interface ContextProps {
   data: any
   conversations: any
   setConversations: any
+  messages: any
+  setMessages: any
+  selected: any
+  setSelected: any
   channels: any
   setChannels: any
   refreshApp: () => void
@@ -46,6 +50,8 @@ export const AppContextProvider = ({ children }: any) => {
   const theme = useMantineTheme()
   const router = useRouter()
   const { id } = router.query
+  const [messages, setMessages] = React.useState<any>([])
+  const [selected, setSelected] = React.useState<any>()
 
   const query = useQuery(
     ['organisation'],
@@ -158,6 +164,10 @@ export const AppContextProvider = ({ children }: any) => {
         setData,
         conversations,
         setConversations,
+        messages,
+        setMessages,
+        selected,
+        setSelected,
         channels,
         setChannels,
         refreshApp: query.refetch,

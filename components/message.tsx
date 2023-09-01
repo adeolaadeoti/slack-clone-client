@@ -27,6 +27,7 @@ const Message = ({
   isLoading,
   theme,
   type,
+  isThread = false,
 }: any) => {
   const { data: organisationData, socket, conversations } = useAppContext()
   const channelCollaborators = data?.collaborators?.map((d: any) => d._id)
@@ -77,21 +78,31 @@ const Message = ({
           content: htmlContent,
         }
 
-        socket.emit('message', {
-          message,
-          organisation: data?.organisation,
-          hasNotOpen: data?.collaborators?.filter((c: any) => c._id !== userId),
-          ...(data?.isChannel && {
-            channelId: data?._id,
-            channelName: data?.name,
-            collaborators: data?.collaborators,
-          }),
-          ...(data?.isConversation && {
-            conversationId: data?._id,
-            collaborators: data?.collaborators,
-            isSelf: data?.collaborators[0]?._id === data?.collaborators[1]?._id,
-          }),
-        })
+        if (isThread) {
+          socket.emit('thread-message', {
+            message,
+            messageId: '',
+          })
+        } else {
+          socket.emit('message', {
+            message,
+            organisation: data?.organisation,
+            hasNotOpen: data?.collaborators?.filter(
+              (c: any) => c._id !== userId
+            ),
+            ...(data?.isChannel && {
+              channelId: data?._id,
+              channelName: data?.name,
+              collaborators: data?.collaborators,
+            }),
+            ...(data?.isConversation && {
+              conversationId: data?._id,
+              collaborators: data?.collaborators,
+              isSelf:
+                data?.collaborators[0]?._id === data?.collaborators[1]?._id,
+            }),
+          })
+        }
 
         // draftJsField = EditorState.moveFocusToEnd(EditorState.push(editorState, ContentState.createFromText(''), 'remove-range'));
         const newState = EditorState.createEmpty()
@@ -155,10 +166,12 @@ const Message = ({
   }, [])
 
   React.useEffect(() => {
-    if (messages.length > 5) {
+    if (messages?.length > 5) {
       stackRef.current?.scrollTo(0, stackRef.current.scrollHeight)
     }
   }, [messages])
+
+  // console.log(isThread)
 
   return (
     <>
@@ -166,7 +179,7 @@ const Message = ({
         p="lg"
         ref={stackRef}
         style={{
-          height: '78vh',
+          height: isThread ? '66vh' : '78vh',
           overflowY: 'scroll',
           gap: '0',
         }}
@@ -179,7 +192,7 @@ const Message = ({
             px="0"
             mb="md"
             style={{
-              borderBottom: `1px solid ${theme.colors.dark[5]}`,
+              borderBottom: `1px solid ${theme?.colors?.dark[5]}`,
             }}
           >
             {type === 'channel' && (
@@ -292,9 +305,6 @@ const Message = ({
           style={{
             border: '1.5px solid #404146',
             borderRadius: '1rem',
-            position: 'absolute',
-            bottom: 5,
-            width: '81%',
           }}
         >
           <Editor

@@ -14,6 +14,7 @@ import { useAppContext } from '../providers/app-provider'
 import { formatDate, getColorHexByIndex } from '../utils/helpers'
 import { LuReplyAll } from 'react-icons/lu'
 import { useRouter } from 'next/router'
+import { BiChevronRight } from 'react-icons/bi'
 
 const useStyles = createStyles((theme) => ({
   message: {
@@ -58,16 +59,42 @@ const useStyles = createStyles((theme) => ({
       backgroundColor: theme.colors.dark[5],
     },
   },
+  viewThread: {
+    cursor: 'pointer',
+    padding: theme.spacing.xs,
+    paddingLeft: '1.5rem',
+    border: `1px solid transparent`,
+    width: 'fit-content',
+    '&:hover': {
+      border: `1px solid ${theme.colors.dark[5]}`,
+      borderRadius: theme.spacing.sm,
+      backgroundColor: theme.colors.dark[9],
+
+      [`& .${getStylesRef('reply')}`]: {
+        display: 'none !important',
+      },
+      [`& .${getStylesRef('view')}`]: {
+        display: 'flex !important',
+      },
+    },
+  },
+  reply: {
+    ref: getStylesRef('reply'),
+  },
+  view: {
+    ref: getStylesRef('view'),
+    display: 'none !important',
+  },
 }))
 
-export default function MessageList({ userId, messages }: any) {
+export default function MessageList({ userId, messages, isThread }: any) {
   const { socket, theme } = useAppContext()
   const messageRefs = useRef<Array<HTMLDivElement>>([])
   const { classes } = useStyles()
   const router = useRouter()
 
   function handleReaction(emoji: string, id: string) {
-    socket.emit('reaction', { emoji, id, userId })
+    socket.emit('reaction', { emoji, id, userId, isThread })
   }
 
   useEffect(() => {
@@ -108,7 +135,7 @@ export default function MessageList({ userId, messages }: any) {
             messageRefs.current.push(element)
           }}
         >
-          <Flex align="center" gap="sm">
+          <Flex gap="sm">
             <Flex className={classes.actions} gap="xs" align="center">
               <Tooltip
                 label="Completed"
@@ -140,21 +167,23 @@ export default function MessageList({ userId, messages }: any) {
                   👍
                 </Text>
               </Tooltip>
-              <Tooltip
-                label="Reply in thread"
-                withArrow
-                position="top"
-                onClick={() =>
-                  router.push(`/c/${router.query.id}/t/${msg._id}`)
-                }
-              >
-                <Flex align="flex-start" gap="xs">
-                  <LuReplyAll color={theme.colors.dark[1]} />
-                  <Text fz="xs" fw="bold" c={theme.colors.dark[1]}>
-                    Reply
-                  </Text>
-                </Flex>
-              </Tooltip>
+              {!isThread && (
+                <Tooltip
+                  label="Reply in thread"
+                  withArrow
+                  position="top"
+                  onClick={() =>
+                    router.push(`/c/${router.query.id}/t/${msg._id}`)
+                  }
+                >
+                  <Flex align="flex-start" gap="xs">
+                    <LuReplyAll color={theme.colors.dark[1]} />
+                    <Text fz="xs" fw="bold" c={theme.colors.dark[1]}>
+                      Reply
+                    </Text>
+                  </Flex>
+                </Tooltip>
+              )}
             </Flex>
             <Avatar
               src={`/avatars/${msg?.sender?.username?.[0].toLowerCase()}.png`}
@@ -223,7 +252,12 @@ export default function MessageList({ userId, messages }: any) {
             </Flex>
           </Flex>
           {msg.threadLastReplyDate && (
-            <Flex align="center" gap="sm">
+            <Flex
+              align="center"
+              gap="sm"
+              className={classes.viewThread}
+              onClick={() => router.push(`/c/${router.query.id}/t/${msg._id}`)}
+            >
               <Flex align="center">
                 {msg?.threadReplies?.map((user: any, index: number) => (
                   <Avatar
@@ -242,12 +276,18 @@ export default function MessageList({ userId, messages }: any) {
                 ))}
               </Flex>
 
-              <Text fz="xs" c={theme.colors.dark[3]}>
+              <Text fz="xs" c={theme.colors.dark[2]}>
                 {msg.threadRepliesCount} replies
               </Text>
-              <Text fz="xs" c={theme.colors.dark[3]}>
+              <Text fz="xs" c={theme.colors.dark[3]} className={classes.reply}>
                 Last reply {formatDate(msg.threadLastReplyDate).timeRender}
               </Text>
+              <Flex align="center" gap="xl" className={classes.view}>
+                <Text fz="xs" c={theme.colors.dark[3]}>
+                  View thread
+                </Text>
+                <BiChevronRight color={theme.colors.dark[3]} />
+              </Flex>
             </Flex>
           )}
         </Flex>

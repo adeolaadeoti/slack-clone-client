@@ -42,6 +42,8 @@ interface ContextProps {
   threadMessages: any
   setThreadMessages: any
   threadMessagesQuery: any
+  selectedMessage: any
+  setSelectedMessage: any
 }
 
 const AppContext = createContext<ContextProps | undefined>(undefined)
@@ -58,6 +60,7 @@ export const AppContextProvider = React.memo(({ children }: any) => {
   const [threadMessages, setThreadMessages] = React.useState<any>([])
 
   const [selected, setSelected] = React.useState<any>()
+  const [selectedMessage, setSelectedMessage] = React.useState<any>()
   const [organisationId, setOrganisationId] = React.useState<string>()
 
   const [channel, setChannel] = React.useState<boolean>()
@@ -181,21 +184,33 @@ export const AppContextProvider = React.memo(({ children }: any) => {
   React.useEffect(() => {
     setChannel(localStorage.getItem('channel') === 'true' ? true : false)
 
-    socket.on('message-updated', ({ id, message }) => {
-      console.log(message)
-      const newMessages = messages.map((msg: any) => {
-        if (msg._id == id) {
-          return message
-        }
-        return msg
-      })
-      setMessages(newMessages)
+    socket.on('message-updated', ({ id, message, isThread }) => {
+      if (id === selectedMessage._id) {
+        setSelectedMessage(message)
+      }
+      if (isThread) {
+        const newMessages = threadMessages.map((msg: any) => {
+          if (msg._id === id) {
+            return message
+          }
+          return msg
+        })
+        setThreadMessages(newMessages)
+      } else {
+        const newMessages = messages.map((msg: any) => {
+          if (msg._id === id) {
+            return message
+          }
+          return msg
+        })
+        setMessages(newMessages)
+      }
     })
 
     return () => {
       socket.off('message-updated')
     }
-  }, [id, messages])
+  }, [id, messages, threadMessages, selectedMessage])
 
   React.useEffect(() => {
     setOrganisationId(localStorage.getItem('organisationId') as string)
@@ -306,6 +321,8 @@ export const AppContextProvider = React.memo(({ children }: any) => {
         threadMessages,
         setThreadMessages,
         threadMessagesQuery,
+        selectedMessage,
+        setSelectedMessage,
       }}
     >
       {children}

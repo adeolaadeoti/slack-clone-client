@@ -313,7 +313,9 @@ const Message = ({
             )}
           </>
         )}
-        {isThread && <MessageList userId={userId} messages={threadMessages} />}
+        {isThread && (
+          <MessageList isThread userId={userId} messages={threadMessages} />
+        )}
       </Stack>
 
       {(channelCollaborators?.includes(userId) || !data?.isChannel) && (

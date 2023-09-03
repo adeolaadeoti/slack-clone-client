@@ -86,7 +86,15 @@ const useStyles = createStyles((theme) => ({
 }))
 
 export default function Thread() {
-  const { theme, socket, data, selected, setThreadMessages } = useAppContext()
+  const {
+    theme,
+    socket,
+    data,
+    selected,
+    setThreadMessages,
+    selectedMessage,
+    setSelectedMessage,
+  } = useAppContext()
   const router = useRouter()
   const { threadId, id } = router.query
   const { classes } = useStyles()
@@ -97,10 +105,11 @@ export default function Thread() {
     () => axios.get(`/messages/${threadId}`),
     {
       refetchOnMount: false,
+      onSuccess(data) {
+        setSelectedMessage(data?.data?.data)
+      },
     }
   )
-
-  const selectedMessage = query?.data?.data?.data
 
   function handleReaction(emoji: string, id: string) {
     socket.emit('reaction', { emoji, id, userId })
@@ -241,7 +250,10 @@ export default function Thread() {
               </Flex>
             </Flex>
           </Flex>
-          <Divider px="sm" label="3 replies" />
+          <Divider
+            px="sm"
+            label={`${selectedMessage?.threadRepliesCount} replies`}
+          />
         </Flex>
       )}
       <Message isThread />

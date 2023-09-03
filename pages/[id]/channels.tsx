@@ -29,6 +29,7 @@ const Channels: NextPage = () => {
     // ['organisation-coworkers'],
     () => axios.get(`/organisation/${id}`),
     {
+      refetchOnMount: false,
       enabled: !!id,
     }
   )

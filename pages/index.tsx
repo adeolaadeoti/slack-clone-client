@@ -44,6 +44,7 @@ const Workspaces: NextPage = () => {
     ['workspaces'],
     () => axios.get(`/organisation/workspaces`),
     {
+      refetchOnMount: false,
       enabled: !!email,
     }
   )

@@ -24,6 +24,7 @@ const Onboarding: NextPage = () => {
     ['organisation', id],
     () => axios.get(`/organisation/${id}`),
     {
+      refetchOnMount: false,
       enabled: !!id,
     }
   )

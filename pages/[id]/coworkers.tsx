@@ -37,6 +37,7 @@ const Coworkers: NextPage = () => {
     // ['organisation-coworkers'],
     () => axios.get(`/organisation/${id}`),
     {
+      refetchOnMount: false,
       enabled: !!id,
     }
   )

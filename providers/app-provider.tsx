@@ -13,6 +13,7 @@ import {
 } from '@mantine/core'
 import io, { Socket } from 'socket.io-client'
 import { useRouter } from 'next/router'
+import { threadId } from 'worker_threads'
 const socket = io('http://localhost:3000')
 
 interface ContextProps {
@@ -38,6 +39,9 @@ interface ContextProps {
   conversationMessagesQuery: any
   channelQuery: any
   conversationQuery: any
+  threadMessages: any
+  setThreadMessages: any
+  threadMessagesQuery: any
 }
 
 const AppContext = createContext<ContextProps | undefined>(undefined)
@@ -49,8 +53,9 @@ export const AppContextProvider = React.memo(({ children }: any) => {
   // const [channelData, setChannelData] = useState<any>(null)
   const theme = useMantineTheme()
   const router = useRouter()
-  const { id } = router.query
+  const { id, threadId } = router.query
   const [messages, setMessages] = React.useState<any>([])
+  const [threadMessages, setThreadMessages] = React.useState<any>([])
 
   const [selected, setSelected] = React.useState<any>()
   const [organisationId, setOrganisationId] = React.useState<string>()
@@ -67,6 +72,7 @@ export const AppContextProvider = React.memo(({ children }: any) => {
     () => axios.get(`/organisation/${organisationId}`),
     {
       enabled: !!organisationId,
+      refetchOnMount: false,
       onSuccess: (data) => {
         setData(data?.data?.data)
       },
@@ -91,6 +97,7 @@ export const AppContextProvider = React.memo(({ children }: any) => {
     () => axios.get(`/channel/${id}`),
     {
       enabled: !!id && channel,
+      refetchOnMount: false,
       onSuccess: async (data) => {
         if (channel) {
           setSelected(data?.data?.data)
@@ -111,6 +118,7 @@ export const AppContextProvider = React.memo(({ children }: any) => {
       }),
     {
       enabled: canQueryChannelMessages,
+      refetchOnMount: false,
       onSuccess: async (data) => {
         setMessages(data?.data?.data)
         setCanQueryChannelMessages(false)
@@ -123,6 +131,8 @@ export const AppContextProvider = React.memo(({ children }: any) => {
     () => axios.get(`/conversations/${id}`),
     {
       enabled: !!id && channel === false,
+      refetchOnMount: false,
+
       onSuccess: async (data) => {
         if (channel === false) {
           setSelected(data?.data?.data)
@@ -144,9 +154,26 @@ export const AppContextProvider = React.memo(({ children }: any) => {
       }),
     {
       enabled: canQueryConversationMessages,
+      refetchOnMount: false,
       onSuccess: async (data) => {
         setMessages(data?.data?.data)
         setCanQueryConversationMessages(false)
+      },
+    }
+  )
+  const threadMessagesQuery = useQuery(
+    [`threads`, threadId],
+    () =>
+      axios.get(`/threads`, {
+        params: {
+          message: threadId,
+        },
+      }),
+    {
+      enabled: !!threadId,
+      refetchOnMount: false,
+      onSuccess: async (data) => {
+        setThreadMessages(data?.data?.data)
       },
     }
   )
@@ -155,6 +182,7 @@ export const AppContextProvider = React.memo(({ children }: any) => {
     setChannel(localStorage.getItem('channel') === 'true' ? true : false)
 
     socket.on('message-updated', ({ id, message }) => {
+      console.log(message)
       const newMessages = messages.map((msg: any) => {
         if (msg._id == id) {
           return message
@@ -275,6 +303,9 @@ export const AppContextProvider = React.memo(({ children }: any) => {
         conversationMessagesQuery,
         channelQuery,
         conversationQuery,
+        threadMessages,
+        setThreadMessages,
+        threadMessagesQuery,
       }}
     >
       {children}

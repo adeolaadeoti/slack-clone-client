@@ -18,6 +18,7 @@ import { BiEditAlt, BiUserPlus } from 'react-icons/bi'
 import { truncateDraftToHtml } from '../utils/helpers'
 import { notifications } from '@mantine/notifications'
 import MessageList from './message-list'
+import { useRouter } from 'next/router'
 
 const Message = ({
   data,
@@ -29,11 +30,16 @@ const Message = ({
   type,
   isThread = false,
 }: any) => {
+  const router = useRouter()
+  const { threadId } = router.query
+
   const {
     data: organisationData,
     socket,
     conversations,
     selected,
+    threadMessages,
+    setThreadMessages,
   } = useAppContext()
   const channelCollaborators = data?.collaborators?.map((d: any) => d._id)
   const userId = organisationData?.profile?._id
@@ -86,7 +92,8 @@ const Message = ({
         if (isThread) {
           socket.emit('thread-message', {
             message,
-            messageId: '',
+            messageId: threadId,
+            userId,
           })
         } else {
           socket.emit('message', {
@@ -130,7 +137,7 @@ const Message = ({
 
     socket.on(
       'notification',
-      ({ message, organisation, collaborators, channelName }) => {
+      ({ newMessage, organisation, collaborators, channelName }) => {
         const collaboratorsId = collaborators?.map((collab: any) => {
           return collab._id
         })
@@ -142,19 +149,22 @@ const Message = ({
             )
         )
         if (organisationData?._id === organisation) {
-          if (exists) {
+          if (collaboratorsId?.includes(userId) && channelName) {
+            console.log('channel')
             notifications.show({
-              title: message?.username,
-              message: truncateDraftToHtml(message?.content),
+              title: `${
+                newMessage?.sender?.username
+              } #${channelName?.toLowerCase()}`,
+              message: truncateDraftToHtml(newMessage?.content),
               color: 'green',
               p: 'md',
             })
             return
-          }
-          if (collaboratorsId?.includes(userId) && channelName) {
+          } else if (exists) {
+            console.log('convo')
             notifications.show({
-              title: `${message?.username} #${channelName?.toLowerCase()}`,
-              message: truncateDraftToHtml(message?.content),
+              title: newMessage?.sender?.username,
+              message: truncateDraftToHtml(newMessage?.content),
               color: 'green',
               p: 'md',
             })
@@ -179,15 +189,16 @@ const Message = ({
   return (
     <>
       <Stack
-        p="lg"
+        p={isThread ? 'md' : 'lg'}
         ref={stackRef}
         style={{
-          height: isThread ? '68.5vh' : '78vh',
+          ...(isThread ? { maxHeight: '63.5vh' } : { height: '77.5vh' }),
           overflowY: 'scroll',
           gap: '0',
+          ...(isThread && { paddingBlock: 'unset', paddingTop: '2rem' }),
         }}
       >
-        {!isLoading && (
+        {!isLoading && !isThread && (
           <Flex
             align="start"
             gap="sm"
@@ -293,11 +304,16 @@ const Message = ({
             </Stack>
           </Flex>
         )}
-        {messagesLoading ? (
-          <Loader color={theme.colors.dark[1]} mt="md" />
-        ) : (
-          <MessageList userId={userId} theme={theme} messages={messages} />
+        {!isThread && (
+          <>
+            {messagesLoading ? (
+              <Loader color={theme.colors.dark[1]} mt="md" />
+            ) : (
+              <MessageList userId={userId} messages={messages} />
+            )}
+          </>
         )}
+        {isThread && <MessageList userId={userId} messages={threadMessages} />}
       </Stack>
 
       {(channelCollaborators?.includes(userId) || !data?.isChannel) && (
@@ -308,6 +324,9 @@ const Message = ({
           style={{
             border: '1.5px solid #404146',
             borderRadius: '1rem',
+
+            position: 'sticky',
+            bottom: 20,
           }}
         >
           <Editor

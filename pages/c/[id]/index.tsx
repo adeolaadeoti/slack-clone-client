@@ -15,12 +15,13 @@ export default function Conversation({ children }: any) {
     setMessages,
     selected,
     setSelected,
-
+    organisationId,
     channel,
     channelMessagesQuery,
     conversationMessagesQuery,
     channelQuery,
     conversationQuery,
+    refreshApp,
   } = useAppContext()
 
   return (
@@ -37,6 +38,9 @@ export default function Conversation({ children }: any) {
     >
       <BackgroundImage h="100vh" src="/bg-chat.png">
         <MessageLayout
+          organisationData={organisationData}
+          organisationId={organisationId}
+          refreshApp={refreshApp}
           messagesLoading={
             channel
               ? channelMessagesQuery.isLoading

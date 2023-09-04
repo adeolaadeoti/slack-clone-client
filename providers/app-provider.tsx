@@ -186,7 +186,7 @@ export const AppContextProvider = React.memo(({ children }: any) => {
     setChannel(localStorage.getItem('channel') === 'true' ? true : false)
 
     socket.on('message-updated', ({ id, message, isThread }) => {
-      if (id === selectedMessage._id) {
+      if (id === selectedMessage?._id) {
         setSelectedMessage(message)
       }
       if (isThread) {

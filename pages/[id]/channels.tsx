@@ -26,7 +26,6 @@ const Channels: NextPage = () => {
 
   const query = useQuery(
     ['organisation', id],
-    // ['organisation-coworkers'],
     () => axios.get(`/organisation/${id}`),
     {
       refetchOnMount: false,
@@ -121,7 +120,7 @@ const Channels: NextPage = () => {
               form.setFieldValue('name', event.currentTarget.value)
             }
             error={
-              form.errors.email && 'Channel name must be more than three words'
+              form.errors.name && 'Channel name must be more than three words'
             }
           />
           <Button loading={mutation.isLoading} type="submit">

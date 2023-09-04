@@ -34,7 +34,6 @@ const Coworkers: NextPage = () => {
 
   const query = useQuery(
     ['organisation', id],
-    // ['organisation-coworkers'],
     () => axios.get(`/organisation/${id}`),
     {
       refetchOnMount: false,

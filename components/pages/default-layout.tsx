@@ -12,13 +12,25 @@ import {
   Stack,
   Skeleton,
   Box,
+  Modal,
+  Paper,
+  Flex,
 } from '@mantine/core'
 import { getColorByIndex } from '../../utils/helpers'
-import { TbHeadphonesOff, TbHeadphones } from 'react-icons/tb'
+import { TbHeadphonesOff, TbHeadphones, TbHash } from 'react-icons/tb'
 import { HiPlus } from 'react-icons/hi'
 import React from 'react'
 import AccountSwitcher from '../account-switcher'
 import { useRouter } from 'next/router'
+import { useDisclosure } from '@mantine/hooks'
+import Input from '../input'
+import Button from '../button'
+import { useAppContext } from '../../providers/app-provider'
+import { useForm } from '@mantine/form'
+import { useMutation } from '@tanstack/react-query'
+import axios from '../../services/axios'
+import { notifications } from '@mantine/notifications'
+import TagInputs from '../tags-input'
 
 const useStyles = createStyles((theme) => ({
   section: {
@@ -68,12 +80,90 @@ export default function DefaultLayout({
   data,
   selected,
   setSelected,
-  setMessages,
   theme,
   thread,
 }: any) {
   const router = useRouter()
   const { classes } = useStyles()
+  const [opened, { open, close }] = useDisclosure(false)
+  const [inviteOpened, { open: inviteOpen, close: inviteClose }] =
+    useDisclosure(false)
+  const { organisationId, setChannels, refreshApp, setConversations } =
+    useAppContext()
+
+  const form = useForm({
+    initialValues: {
+      name: '',
+      organisationId: organisationId,
+    },
+    validate: {
+      name: (val) =>
+        val.length > 3 ? null : 'Channel name must be more than three words',
+    },
+  })
+
+  const mutation = useMutation({
+    mutationFn: (body) => {
+      return axios.post('/channel', body)
+    },
+    onError(error: any) {
+      notifications.show({
+        message: error?.response?.data?.data?.name,
+        color: 'red',
+        p: 'md',
+      })
+    },
+    onSuccess(data) {
+      setChannels((channels: any) => [...channels, data?.data?.data])
+      refreshApp()
+      close()
+      form.reset()
+      notifications.show({
+        message: `#${form.values.name} channel created succesfully`,
+        color: 'green',
+        p: 'md',
+      })
+    },
+  })
+
+  const inviteForm = useForm({
+    initialValues: {
+      emails: [''],
+      organisationId,
+    },
+    validate: {
+      emails: (val) => (val.length > 0 ? null : 'Email must be more than one'),
+    },
+  })
+
+  const [isDisabled, setIsDisabled] = React.useState(true)
+
+  const inviteMutation = useMutation({
+    mutationFn: (body) => {
+      return axios.post('/teammates', body)
+    },
+    onError(error: any) {
+      notifications.show({
+        message: error?.response?.data?.data?.name,
+        color: 'red',
+        p: 'md',
+      })
+    },
+    onSuccess(data) {
+      // console.log(data?.data?.data)
+      // setConversations((convo: any) => [...convo, data?.data?.data?.coWorkers])
+      // refreshApp()
+      inviteClose()
+      form.reset()
+      notifications.show({
+        message: `Invite sent successfully to ${inviteForm.values.emails.join(
+          ', '
+        )}`,
+        color: 'green',
+        p: 'md',
+      })
+    },
+  })
 
   function handleChannel(channel: any) {
     setSelected(channel)
@@ -89,171 +179,261 @@ export default function DefaultLayout({
   }
 
   return (
-    <Grid h="100vh" m="0">
-      <Grid.Col span={2} p="0">
-        <Navbar>
-          <Navbar.Section mt="sm" p="sm" pt="xs" pb="1.18rem">
-            <AccountSwitcher data={data} />
-          </Navbar.Section>
-
-          <Navbar.Section className={classes.section} px="0" mx="sm">
-            <Group pl="sm" align="center" position="apart">
-              <Text size="xs" mb="sm" color="dimmed">
-                Channels
-              </Text>
-              <Tooltip label="Add channels" withArrow position="right">
-                <ActionIcon variant="default" size={30}>
-                  <HiPlus size="1.2rem" />
-                </ActionIcon>
-              </Tooltip>
-            </Group>
-
-            {!channels && (
-              <Stack spacing="sm">
-                <Skeleton height={15} width={250} radius="md" />
-                <Skeleton height={15} width={150} radius="md" />
-              </Stack>
-            )}
-
-            {channels?.map((channel: any) => (
-              <UnstyledButton
-                w="100%"
-                px="sm"
-                onClick={() => handleChannel(channel)}
-                key={channel?._id}
-                className={classes.collectionLink}
-                style={{
-                  transition: 'all .2s ease',
-                  borderRadius: 10,
-                  fontWeight: channel?.hasNotOpen?.includes(data?.profile?._id)
-                    ? 'bold'
-                    : '400',
-                  color: channel?.hasNotOpen?.includes(data?.profile?._id)
-                    ? 'white'
-                    : '#C1C2C5',
-                  backgroundColor:
-                    selected?._id === channel?._id
-                      ? theme.colors.dark[6]
-                      : 'transparent',
-                }}
-              >
-                # {channel?.name}
-              </UnstyledButton>
-            ))}
-          </Navbar.Section>
-
-          <Navbar.Section className={classes.section} px="0" mx="sm">
-            <Group pl="sm" align="center" position="apart">
-              <Text size="xs" weight="bold" mb="sm" color="dimmed">
-                Direct messages
-              </Text>
-              <Tooltip label="Add teammates" withArrow position="right">
-                <ActionIcon variant="default" size={30}>
-                  <HiPlus size="1.2rem" />
-                </ActionIcon>
-              </Tooltip>
-            </Group>
-            {!conversations && (
-              <Stack spacing="sm">
-                <Skeleton height={15} width={250} radius="md" />
-                <Skeleton height={15} width={150} radius="md" />
-              </Stack>
-            )}
-            {conversations?.map((convo: any, index: any) => (
-              <UnstyledButton
-                w="100%"
-                px="sm"
-                onClick={() => handleConversation(convo)}
-                key={convo?._id}
-                className={classes.collectionLink}
-                style={{
-                  transition: 'all .2s ease',
-                  borderRadius: 10,
-                  fontWeight: convo?.hasNotOpen?.includes(data?.profile?._id)
-                    ? 'bold'
-                    : '400',
-                  color: convo?.hasNotOpen?.includes(data?.profile?._id)
-                    ? 'white'
-                    : '#C1C2C5',
-
-                  backgroundColor:
-                    selected?._id === convo._id
-                      ? theme.colors.dark[6]
-                      : 'transparent',
-                }}
-              >
-                <Avatar
-                  src={`/avatars/${convo?.name?.[0].toLowerCase()}.png`}
-                  size="md"
-                  color={getColorByIndex(index)}
-                  radius="xl"
-                >
-                  {convo?.name[0].toLowerCase()}
-                </Avatar>
-                {convo.name}{' '}
-                {convo.isOnline ? (
-                  <Box
-                    h=".7rem"
-                    w=".7rem"
-                    bg="green"
-                    style={{
-                      borderRadius: '5rem',
-                    }}
-                  ></Box>
-                ) : (
-                  <Box
-                    h=".7rem"
-                    w=".7rem"
-                    bg="gray"
-                    style={{
-                      borderRadius: '5rem',
-                    }}
-                  ></Box>
-                )}
-                <Text fw="100" c={theme.colors.dark[3]} span>
-                  {convo.isSelf ? 'you' : ''}{' '}
-                </Text>
-              </UnstyledButton>
-            ))}
-          </Navbar.Section>
-
-          <Navbar.Section className={classes.footer}>
-            {!selected?.name && (
-              <Skeleton height={15} width={150} radius="md" />
-            )}
-            {selected?.name && (
-              <Text tt="lowercase" size="sm">
-                {selected?.name}
-              </Text>
-            )}
-            <Switch
-              size="xl"
-              color={theme.colorScheme === 'dark' ? 'gray' : 'dark'}
-              onLabel={
-                <TbHeadphonesOff size="1.5rem" color={theme.colors.red[4]} />
+    <>
+      <Modal
+        opened={inviteOpened}
+        onClose={inviteClose}
+        title={`Invite people to ${data?.name}`}
+        centered
+        size="45.25rem"
+        radius="lg"
+        padding="xl"
+        overlayProps={{
+          color: theme.colors.dark[10],
+          opacity: 0.55,
+          blur: 2,
+        }}
+      >
+        <TagInputs
+          onValueChange={(val) => {
+            inviteForm.setFieldValue('emails', val)
+            setIsDisabled(false)
+          }}
+        />
+        <Flex align="center" gap="md" mt="lg">
+          <Button
+            disabled={isDisabled}
+            onClick={() =>
+              inviteMutation.mutate({
+                emails: inviteForm.values.emails,
+                organisationId,
+              } as any)
+            }
+            loading={inviteMutation.isLoading}
+            type="submit"
+          >
+            {inviteMutation.isLoading ? '' : 'Send invite'}
+          </Button>
+        </Flex>
+      </Modal>
+      <Modal
+        opened={opened}
+        onClose={close}
+        title="Create a channel"
+        centered
+        size="lg"
+        radius="lg"
+        padding="xl"
+        overlayProps={{
+          color: theme.colors.dark[10],
+          opacity: 0.55,
+          blur: 2,
+        }}
+      >
+        <form
+          onSubmit={form.onSubmit(() =>
+            mutation.mutate({
+              name: form.values.name,
+              organisationId,
+            } as any)
+          )}
+        >
+          <Stack spacing="md">
+            <Input
+              data-autofocus
+              required
+              label="Name"
+              placeholder="e.g plan-budget"
+              icon={<TbHash />}
+              onChange={(event) =>
+                form.setFieldValue('name', event.currentTarget.value)
               }
-              offLabel={
-                <TbHeadphones size="1.5rem" color={theme.colors.blue[6]} />
+              error={
+                form.errors.name && 'Channel name must be more than three words'
               }
             />
-          </Navbar.Section>
-        </Navbar>
-      </Grid.Col>
+            <Text size="xs" mb="lg">
+              Channels are where conversations happen around a topic. Use a name
+              that is easy to find and understand.
+            </Text>
+            <Button loading={mutation.isLoading} type="submit">
+              {mutation.isLoading ? '' : 'Create channel'}
+            </Button>
+          </Stack>
+        </form>
+      </Modal>
+      <Grid h="100vh" m="0">
+        <Grid.Col span={2} p="0">
+          <Navbar>
+            <Navbar.Section mt="sm" p="sm" pt="xs" pb="1.18rem">
+              <AccountSwitcher data={data} />
+            </Navbar.Section>
 
-      <Grid.Col span="auto" p="0">
-        {children}
-      </Grid.Col>
-      {thread && (
-        <Grid.Col
-          span={3}
-          p="0"
-          style={{
-            borderLeft: `1px solid ${theme.colors.dark[5]}`,
-          }}
-        >
-          {thread}
+            <Navbar.Section className={classes.section} px="0" mx="sm">
+              <Group pl="sm" align="center" position="apart">
+                <Text size="xs" mb="sm" color="dimmed">
+                  Channels
+                </Text>
+                <Tooltip label="Add channels" withArrow position="right">
+                  <ActionIcon onClick={open} variant="default" size={30}>
+                    <HiPlus size="1.2rem" />
+                  </ActionIcon>
+                </Tooltip>
+              </Group>
+
+              {!channels && (
+                <Stack spacing="sm">
+                  <Skeleton height={15} width={250} radius="md" />
+                  <Skeleton height={15} width={150} radius="md" />
+                </Stack>
+              )}
+
+              {channels?.map((channel: any) => (
+                <UnstyledButton
+                  w="100%"
+                  px="sm"
+                  onClick={() => handleChannel(channel)}
+                  key={channel?._id}
+                  className={classes.collectionLink}
+                  style={{
+                    transition: 'all .2s ease',
+                    borderRadius: 10,
+                    fontWeight: channel?.hasNotOpen?.includes(
+                      data?.profile?._id
+                    )
+                      ? 'bold'
+                      : '400',
+                    color: channel?.hasNotOpen?.includes(data?.profile?._id)
+                      ? 'white'
+                      : '#C1C2C5',
+                    backgroundColor:
+                      selected?._id === channel?._id
+                        ? theme.colors.dark[6]
+                        : 'transparent',
+                  }}
+                >
+                  # {channel?.name}
+                </UnstyledButton>
+              ))}
+            </Navbar.Section>
+
+            <Navbar.Section className={classes.section} px="0" mx="sm">
+              <Group pl="sm" align="center" position="apart">
+                <Text size="xs" weight="bold" mb="sm" color="dimmed">
+                  Direct messages
+                </Text>
+                <Tooltip
+                  label={`Invite people to ${data?.name}`}
+                  withArrow
+                  position="right"
+                >
+                  <ActionIcon onClick={inviteOpen} variant="default" size={30}>
+                    <HiPlus size="1.2rem" />
+                  </ActionIcon>
+                </Tooltip>
+              </Group>
+              {!conversations && (
+                <Stack spacing="sm">
+                  <Skeleton height={15} width={250} radius="md" />
+                  <Skeleton height={15} width={150} radius="md" />
+                </Stack>
+              )}
+              {conversations?.map((convo: any, index: any) => (
+                <UnstyledButton
+                  w="100%"
+                  px="sm"
+                  onClick={() => handleConversation(convo)}
+                  key={convo?._id}
+                  className={classes.collectionLink}
+                  style={{
+                    transition: 'all .2s ease',
+                    borderRadius: 10,
+                    fontWeight: convo?.hasNotOpen?.includes(data?.profile?._id)
+                      ? 'bold'
+                      : '400',
+                    color: convo?.hasNotOpen?.includes(data?.profile?._id)
+                      ? 'white'
+                      : '#C1C2C5',
+
+                    backgroundColor:
+                      selected?._id === convo._id
+                        ? theme.colors.dark[6]
+                        : 'transparent',
+                  }}
+                >
+                  <Avatar
+                    src={`/avatars/${convo?.name?.[0].toLowerCase()}.png`}
+                    size="md"
+                    color={getColorByIndex(index)}
+                    radius="xl"
+                  >
+                    {convo?.name[0].toLowerCase()}
+                  </Avatar>
+                  {convo.name}{' '}
+                  {convo.isOnline ? (
+                    <Box
+                      h=".7rem"
+                      w=".7rem"
+                      bg="green"
+                      style={{
+                        borderRadius: '5rem',
+                      }}
+                    ></Box>
+                  ) : (
+                    <Box
+                      h=".7rem"
+                      w=".7rem"
+                      bg="gray"
+                      style={{
+                        borderRadius: '5rem',
+                      }}
+                    ></Box>
+                  )}
+                  <Text fw="100" c={theme.colors.dark[3]} span>
+                    {convo.isSelf ? 'you' : ''}{' '}
+                  </Text>
+                </UnstyledButton>
+              ))}
+            </Navbar.Section>
+
+            <Navbar.Section className={classes.footer}>
+              {!selected?.name && (
+                <Skeleton height={15} width={150} radius="md" />
+              )}
+              {selected?.name && (
+                <Text tt="lowercase" size="sm">
+                  {selected?.name}
+                </Text>
+              )}
+              <Switch
+                size="xl"
+                color={theme.colorScheme === 'dark' ? 'gray' : 'dark'}
+                onLabel={
+                  <TbHeadphonesOff size="1.5rem" color={theme.colors.red[4]} />
+                }
+                offLabel={
+                  <TbHeadphones size="1.5rem" color={theme.colors.blue[6]} />
+                }
+              />
+            </Navbar.Section>
+          </Navbar>
         </Grid.Col>
-      )}
-    </Grid>
+
+        <Grid.Col span="auto" p="0">
+          {children}
+        </Grid.Col>
+        {thread && (
+          <Grid.Col
+            span={3}
+            p="0"
+            style={{
+              borderLeft: `1px solid ${theme.colors.dark[5]}`,
+            }}
+          >
+            {thread}
+          </Grid.Col>
+        )}
+      </Grid>
+    </>
   )
 }

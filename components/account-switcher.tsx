@@ -49,12 +49,12 @@ export default function AccountSwitcher({ data }: AccountSwitcherProps) {
   const [userMenuOpened, setUserMenuOpened] = useState(false)
 
   function handleLogout() {
-    // localStorage.removeItem('organisationId')
-    // localStorage.removeItem('signUpEmail')
-    // localStorage.removeItem('access-token')
-    // localStorage.removeItem('channel')
+    localStorage.removeItem('organisationId')
+    localStorage.removeItem('signUpEmail')
+    localStorage.removeItem('access-token')
+    localStorage.removeItem('channel')
     socket.emit('user-leave', { id: data?.profile?._id, isOnline: false })
-    // router.push('/signin')
+    router.push('/signin')
   }
 
   return (

@@ -44,6 +44,7 @@ interface ContextProps {
   threadMessagesQuery: any
   selectedMessage: any
   setSelectedMessage: any
+  organisationId: any
 }
 
 const AppContext = createContext<ContextProps | undefined>(undefined)
@@ -274,7 +275,7 @@ export const AppContextProvider = React.memo(({ children }: any) => {
     }
   }, [data, id])
 
-  if (query.isLoading)
+  if (query.isLoading && router.pathname.includes('c/'))
     return (
       <Center p="xl" h="100vh" w="100vw" bg={theme.colors.dark[9]}>
         <Flex gap={10} align="center" w="30%" mx="auto">
@@ -295,6 +296,7 @@ export const AppContextProvider = React.memo(({ children }: any) => {
   return (
     <AppContext.Provider
       value={{
+        organisationId,
         theme,
         socket,
         data,

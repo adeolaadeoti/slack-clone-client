@@ -8,7 +8,7 @@ import {
   Tooltip,
   createStyles,
 } from '@mantine/core'
-import { error } from 'console'
+import adapter from 'webrtc-adapter'
 import React from 'react'
 import { BiMicrophone, BiScreenshot, BiVideo, BiWindow } from 'react-icons/bi'
 import { BsRecord } from 'react-icons/bs'
@@ -37,81 +37,112 @@ const useStyles = createStyles((theme) => ({
   },
 }))
 
+const config = {
+  iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
+}
+
 export default function Huddle({ selected, theme, socket, userId }: any) {
   const { classes } = useStyles()
 
   const [checked, setChecked] = React.useState(true)
-  const localVideo = React.useRef<any>()
-  const remoteVideo = React.useRef<any>()
-  const pc = React.useRef<RTCPeerConnection>()
+  const localVideoRef = React.useRef<any>()
+  const remoteVideoRef = React.useRef<any>()
+  const pcRef = React.useRef<RTCPeerConnection>()
 
   React.useEffect(() => {
     if (checked) {
-      navigator.mediaDevices
-        .getUserMedia({ audio: false, video: true })
-        .then((stream) => {
-          localVideo.current.srcObject = stream
-          stream.getTracks().forEach((track) => {
-            _pc?.addTrack(track, stream)
-          })
-        })
-        .catch((error) => {
-          console.log('get userMediaError', error)
-        })
-
-      const _pc = new RTCPeerConnection()
-      _pc.onicecandidate = (e) => {
-        if (e.candidate) {
-          console.log(JSON.stringify(e.candidate))
-          localStorage.setItem('candidate', JSON.stringify(e.candidate))
-        }
-      }
-      _pc.onconnectionstatechange = (e) => {
-        console.log(e)
-      }
-      _pc.ontrack = (e) => {
-        remoteVideo.current.srcObject = e.streams[0]
-      }
-
-      pc.current = _pc
+      setupWebRTC()
     }
   }, [checked])
 
+  async function setupWebRTC() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: true,
+      })
+
+      localVideoRef.current.srcObject = stream
+
+      const pc = new RTCPeerConnection(config)
+
+      pc.onicecandidate = (e) => {
+        if (e.candidate) {
+          console.log('ICE candidate:', e.candidate)
+          localStorage.setItem('candidate', JSON.stringify(e.candidate))
+        }
+      }
+
+      pc.onconnectionstatechange = (e) => {
+        console.log('Connection state:', pc.connectionState)
+        console.log('Connection state:', pc)
+      }
+
+      pc.ontrack = (e) => {
+        remoteVideoRef.current.srcObject = e.streams[0]
+      }
+
+      pc.onnegotiationneeded = async () => {
+        createOffer()
+      }
+
+      stream.getTracks().forEach((track) => {
+        pc.addTrack(track, stream)
+      })
+
+      pcRef.current = pc
+    } catch (error) {
+      console.error('Error setting up WebRTC:', error)
+    }
+  }
+
   async function createOffer() {
     try {
-      const offer = await pc.current?.createOffer()
-      localStorage.setItem('offer', JSON.stringify(offer) as any)
-      await pc.current?.setLocalDescription(offer)
-      console.log(offer)
+      const offer = await pcRef.current?.createOffer()
+      await pcRef.current?.setLocalDescription(offer)
+      localStorage.setItem('offer', JSON.stringify(offer))
+      console.log('Offer created:', offer)
     } catch (error) {
-      console.log(error)
+      console.error('Error creating offer:', error)
     }
   }
 
   async function createAnswer() {
     try {
-      const offer = await pc.current?.createAnswer()
-      localStorage.setItem('offer', JSON.stringify(offer) as any)
-      await pc.current?.setLocalDescription(offer)
-      console.log(offer)
+      const offer = await pcRef.current?.createAnswer()
+      await pcRef.current?.setLocalDescription(offer)
+      localStorage.setItem('offer', JSON.stringify(offer))
+      console.log('Answer created:', offer)
     } catch (error) {
-      console.log(error)
+      console.error('Error creating answer:', error)
     }
   }
 
   function setRemoteDescription() {
-    const offer = JSON.parse(localStorage.getItem('offer') as any)
-    console.log(offer)
-    pc.current?.setRemoteDescription(new RTCSessionDescription(offer))
+    const offer = JSON.parse(localStorage.getItem('offer') as string)
+
+    if (offer) {
+      pcRef.current
+        ?.setRemoteDescription(new RTCSessionDescription(offer))
+        .then(() => {
+          console.log('Remote description set successfully')
+        })
+        .catch((error) => {
+          console.error('Error setting remote description:', error)
+        })
+    }
   }
 
   async function addIceCandidate() {
     try {
-      const candidate = JSON.parse(localStorage.getItem('candidate') as any)
-      console.log('Adding candidate...', candidate)
-      pc.current?.addIceCandidate(new RTCIceCandidate(candidate))
+      const candidate = JSON.parse(localStorage.getItem('candidate') as string)
+
+      if (candidate) {
+        await pcRef.current?.addIceCandidate(new RTCIceCandidate(candidate))
+        console.log('ICE candidate added successfully:', candidate)
+      }
     } catch (error) {
-      console.log(error)
+      console.error('Error adding ICE candidate:', error)
     }
   }
 
@@ -132,11 +163,11 @@ export default function Huddle({ selected, theme, socket, userId }: any) {
           </Flex>
 
           <Flex align="center" gap="sm">
-            <video autoPlay ref={localVideo} className={classes.video} />
+            <video autoPlay ref={localVideoRef} className={classes.video} />
             <video
               id="video"
               autoPlay
-              ref={remoteVideo}
+              ref={remoteVideoRef}
               className={classes.video}
             />
           </Flex>

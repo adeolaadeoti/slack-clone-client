@@ -24,7 +24,8 @@
     "react-dom": "18.0.0",
     "react-draft-wysiwyg": "^1.15.0",
     "react-icons": "^4.10.1",
-    "socket.io-client": "^4.7.2"
+    "socket.io-client": "^4.7.2",
+    "webrtc-adapter": "^8.2.3"
   },
   "devDependencies": {
     "@tanstack/eslint-plugin-query": "^4.32.1",

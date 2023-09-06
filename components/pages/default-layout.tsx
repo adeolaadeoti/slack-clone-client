@@ -13,7 +13,6 @@ import {
   Skeleton,
   Box,
   Modal,
-  Paper,
   Flex,
 } from '@mantine/core'
 import { getColorByIndex } from '../../utils/helpers'
@@ -31,6 +30,7 @@ import { useMutation } from '@tanstack/react-query'
 import axios from '../../services/axios'
 import { notifications } from '@mantine/notifications'
 import TagInputs from '../tags-input'
+import Huddle from '../huddle'
 
 const useStyles = createStyles((theme) => ({
   section: {
@@ -41,18 +41,18 @@ const useStyles = createStyles((theme) => ({
       borderTop: `1px solid ${theme.colors.dark[4]}`,
     },
   },
-  footer: {
-    marginTop: 'auto',
-    marginBottom: theme.spacing.sm,
-    padding: theme.spacing.md,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderRadius: '1rem',
+  // footer: {
+  //   marginTop: 'auto',
+  //   marginBottom: theme.spacing.sm,
+  //   padding: theme.spacing.md,
+  //   display: 'flex',
+  //   alignItems: 'center',
+  //   justifyContent: 'space-between',
+  //   borderRadius: '1rem',
 
-    paddingTop: theme.spacing.md,
-    borderTop: `1px solid ${theme.colors.dark[4]}`,
-  },
+  //   paddingTop: theme.spacing.md,
+  //   borderTop: `1px solid ${theme.colors.dark[4]}`,
+  // },
 
   collectionLink: {
     display: 'flex',
@@ -88,8 +88,8 @@ export default function DefaultLayout({
   const [opened, { open, close }] = useDisclosure(false)
   const [inviteOpened, { open: inviteOpen, close: inviteClose }] =
     useDisclosure(false)
-  const { organisationId, setChannels, refreshApp, setConversations } =
-    useAppContext()
+  const { organisationId, setChannels, refreshApp, socket } = useAppContext()
+  const userId = data?.profile?._id
 
   const form = useForm({
     initialValues: {
@@ -149,10 +149,7 @@ export default function DefaultLayout({
         p: 'md',
       })
     },
-    onSuccess(data) {
-      // console.log(data?.data?.data)
-      // setConversations((convo: any) => [...convo, data?.data?.data?.coWorkers])
-      // refreshApp()
+    onSuccess() {
       inviteClose()
       form.reset()
       notifications.show({
@@ -263,7 +260,13 @@ export default function DefaultLayout({
         </form>
       </Modal>
       <Grid h="100vh" m="0">
-        <Grid.Col span={2} p="0">
+        <Grid.Col
+          span={2}
+          p="0"
+          style={{
+            position: 'relative',
+          }}
+        >
           <Navbar>
             <Navbar.Section mt="sm" p="sm" pt="xs" pb="1.18rem">
               <AccountSwitcher data={data} />
@@ -396,26 +399,14 @@ export default function DefaultLayout({
               ))}
             </Navbar.Section>
 
-            <Navbar.Section className={classes.footer}>
-              {!selected?.name && (
-                <Skeleton height={15} width={150} radius="md" />
-              )}
-              {selected?.name && (
-                <Text tt="lowercase" size="sm">
-                  {selected?.name}
-                </Text>
-              )}
-              <Switch
-                size="xl"
-                color={theme.colorScheme === 'dark' ? 'gray' : 'dark'}
-                onLabel={
-                  <TbHeadphonesOff size="1.5rem" color={theme.colors.red[4]} />
-                }
-                offLabel={
-                  <TbHeadphones size="1.5rem" color={theme.colors.blue[6]} />
-                }
-              />
-            </Navbar.Section>
+            {/* <Navbar.Section className={classes.footer}> */}
+            <Huddle
+              selected={selected}
+              theme={theme}
+              socket={socket}
+              userId={userId}
+            />
+            {/* </Navbar.Section> */}
           </Navbar>
         </Grid.Col>
 

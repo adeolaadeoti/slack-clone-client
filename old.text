@@ -1,0 +1,411 @@
+import {
+  ActionIcon,
+  Flex,
+  Skeleton,
+  Stack,
+  Switch,
+  Text,
+  Tooltip,
+  createStyles,
+} from '@mantine/core'
+import React from 'react'
+import { BiMicrophone, BiScreenshot, BiVideo, BiWindow } from 'react-icons/bi'
+import { BsRecord } from 'react-icons/bs'
+import { FaRegWindowRestore } from 'react-icons/fa'
+import { LuScreenShare } from 'react-icons/lu'
+import { TbHeadphones, TbHeadphonesOff } from 'react-icons/tb'
+
+const useStyles = createStyles((theme) => ({
+  huddle: {
+    overflow: 'hidden',
+    position: 'absolute',
+    bottom: '0',
+    left: '0',
+    zIndex: 10,
+    padding: theme.spacing.md,
+    borderRadius: '1rem',
+    paddingTop: theme.spacing.md,
+    borderTop: `1px solid ${theme.colors.dark[4]}`,
+    backgroundColor: theme.colors.dark[7],
+    width: '100%',
+  },
+  video: {
+    height: 100,
+    borderRadius: '1rem',
+    border: `1px solid ${theme.colors.dark[4]}`,
+  },
+}))
+
+export default function Huddle({ selected, theme, socket, userId }: any) {
+  const { classes } = useStyles()
+  //   const [remoteStreams, setRemoteStreams] = React.useState([])
+  const [checked, setChecked] = React.useState(false)
+  const localVideo = React.useRef<any>()
+  const localStream = React.useRef<any>()
+  const remoteVideo = React.useRef<any>()
+  const otherUser = React.useRef<any>()
+  const pc = React.useRef<any>()
+
+  function createPeer(userID?: any) {
+    const peer = new RTCPeerConnection({
+      iceServers: [
+        {
+          urls: 'stun:stun.stunprotocol.org',
+        },
+        {
+          urls: 'turn:numb.viagenie.ca',
+          credential: 'muazkh',
+          username: 'webrtc@live.com',
+        },
+      ],
+    })
+
+    peer.onicecandidate = handleICECandidateEvent
+    peer.ontrack = handleTrackEvent
+    peer.onnegotiationneeded = () => handleNegotiationNeededEvent(userID)
+
+    return peer
+  }
+
+  function callUser(userID: string) {
+    pc.current = createPeer(userID)
+    localStream.current
+      .getTracks()
+      .forEach((track: any) => pc.current.addTrack(track, localStream.current))
+  }
+
+  function handleNegotiationNeededEvent(userID: any) {
+    pc.current
+      .createOffer()
+      .then((offer: any) => {
+        return pc.current.setLocalDescription(offer)
+      })
+      .then(() => {
+        const payload = {
+          target: userID,
+          caller: socket.id,
+          sdp: pc.current.localDescription,
+        }
+        socket.emit('offer', payload)
+      })
+      .catch((e: any) => console.log(e))
+  }
+
+  function handleRecieveCall(incoming: any) {
+    pc.current = createPeer()
+    const desc = new RTCSessionDescription(incoming.sdp)
+    pc.current
+      .setRemoteDescription(desc)
+      .then(() => {
+        localStream.current
+          .getTracks()
+          .forEach((track: any) =>
+            pc.current.addTrack(track, localStream.current)
+          )
+      })
+      .then(() => {
+        return pc.current.createAnswer()
+      })
+      .then((answer: any) => {
+        return pc.current.setLocalDescription(answer)
+      })
+      .then(() => {
+        const payload = {
+          target: incoming.caller,
+          caller: socket.id,
+          sdp: pc.current.localDescription,
+        }
+        socket.emit('answer', payload)
+      })
+  }
+
+  function handleAnswer(message: any) {
+    const desc = new RTCSessionDescription(message.sdp)
+    pc.current.setRemoteDescription(desc).catch((e: any) => console.log(e))
+  }
+
+  function handleICECandidateEvent(e: any) {
+    if (e.candidate) {
+      const payload = {
+        target: otherUser.current,
+        candidate: e.candidate,
+      }
+      socket.emit('ice-candidate', payload)
+    }
+  }
+
+  function handleNewICECandidateMsg(incoming: any) {
+    const candidate = new RTCIceCandidate(incoming)
+
+    pc.current.addIceCandidate(candidate).catch((e: any) => console.log(e))
+  }
+
+  function handleTrackEvent(e: any) {
+    remoteVideo.current.srcObject = e.streams[0]
+  }
+
+  React.useEffect(() => {
+    if (checked) {
+      navigator.mediaDevices
+        .getUserMedia({ audio: true, video: true })
+        .then((stream) => {
+          localVideo.current.srcObject = stream
+          localStream.current = stream
+
+          //   socket = socket
+          socket.emit('join room', { roomId: selected?._id, userId })
+
+          socket.on('other user', (userID: string) => {
+            callUser(userID)
+            otherUser.current = userID
+          })
+
+          socket.on('user joined', (userID: string) => {
+            otherUser.current = userID
+          })
+
+          socket.on('offer', handleRecieveCall)
+
+          socket.on('answer', handleAnswer)
+
+          socket.on('ice-candidate', handleNewICECandidateMsg)
+        })
+    }
+
+    return () => {
+      socket.off('join room')
+      socket.off('other user')
+      socket.off('user joined')
+      socket.off('offer')
+      socket.off('answer')
+      socket.off('ice-candidate')
+    }
+  }, [checked])
+
+  return (
+    <Stack w="100%" className={classes.huddle}>
+      {checked && (
+        <Stack w="100%">
+          <Flex align="center" justify="space-between">
+            <Text tt="lowercase" size="sm">
+              {selected?.isChannel && '#'}
+              {selected?.name}
+            </Text>
+            <Tooltip label="Open mini window" withArrow position="top">
+              <ActionIcon onClick={() => {}} variant="default" size={40}>
+                <FaRegWindowRestore size="1.3rem" />
+              </ActionIcon>
+            </Tooltip>
+          </Flex>
+          <Flex align="center" gap="sm">
+            <video ref={localVideo} autoPlay muted className={classes.video} />
+            <video ref={remoteVideo} autoPlay muted className={classes.video} />
+            {/* <video
+              key={`remoteVideo-${index}`}
+              ref={(videoRef) => (remoteVideosRef.current[index] = videoRef)}
+              autoPlay
+            /> */}
+          </Flex>
+          <Flex gap="sm" align="center">
+            <Tooltip label="Mute mic" withArrow position="top">
+              <ActionIcon onClick={() => {}} variant="default" size={40}>
+                <BiMicrophone size="1.7rem" />
+              </ActionIcon>
+            </Tooltip>
+            <Tooltip label="Turn on video" withArrow position="top">
+              <ActionIcon onClick={() => {}} variant="default" size={40}>
+                <BiVideo size="2rem" />
+              </ActionIcon>
+            </Tooltip>
+            <Tooltip label="Share screen" withArrow position="top">
+              <ActionIcon onClick={() => {}} variant="default" size={40}>
+                <LuScreenShare size="1.6rem" />
+              </ActionIcon>
+            </Tooltip>
+            <Switch
+              ml="auto"
+              checked={checked}
+              onChange={(event) => setChecked(event.currentTarget.checked)}
+              size="xl"
+              color={theme.colorScheme === 'dark' ? 'gray' : 'dark'}
+              onLabel={
+                <TbHeadphonesOff size="1.5rem" color={theme.colors.red[4]} />
+              }
+              offLabel={
+                <TbHeadphones size="1.5rem" color={theme.colors.blue[6]} />
+              }
+            />
+          </Flex>
+        </Stack>
+      )}
+      {!checked && (
+        <Flex align="center" justify="space-between">
+          {!selected?.name && <Skeleton height={15} width={150} radius="md" />}
+          {selected?.name && (
+            <Text tt="lowercase" size="sm">
+              {selected?.isChannel && '#'}
+              {selected?.name}
+            </Text>
+          )}
+          <Switch
+            checked={checked}
+            onChange={(event) => setChecked(event.currentTarget.checked)}
+            size="xl"
+            color={theme.colorScheme === 'dark' ? 'gray' : 'dark'}
+            onLabel={
+              <TbHeadphonesOff size="1.5rem" color={theme.colors.red[4]} />
+            }
+            offLabel={
+              <TbHeadphones size="1.5rem" color={theme.colors.blue[6]} />
+            }
+          />
+        </Flex>
+      )}
+    </Stack>
+  )
+}
+
+
+
+  //   function createPeerConnection() {
+  //     pc.current = new RTCPeerConnection({
+  //       iceServers: [
+  //         {
+  //           urls: 'stun:stun.stunprotocol.org',
+  //         },
+  //         {
+  //           urls: 'turn:numb.viagenie.ca',
+  //           credential: 'muazkh',
+  //           username: 'webrtc@live.com',
+  //         },
+  //       ],
+  //     })
+
+  //     pc.current.onicecandidate = handleICECandidateEvent
+  //     pc.current.ontrack = handleTrackEvent
+  //     pc.current.oniceconnectionstatechange = (e: any) => {
+  //       console.log(e)
+  //     }
+
+  //     console.log(pc.current)
+
+  //     return pc.current
+  //   }
+
+  //   async function makeCall() {
+  //     await createPeerConnection()
+  //     const sdp = await pc.current.createOffer()
+  //     await pc.current.setLocalDescription(sdp)
+  //     socket.emit('offer', sdp)
+  //   }
+
+  //   async function handleOffer(offer: any) {
+  //     console.log(pc.current)
+  // console.log(offer)
+  // // await createPeerConnection()
+  // const desc = new RTCSessionDescription(offer)
+  // await pc.current.setRemoteDescription(desc)
+
+  // const answer = await pc.current.createAnswer()
+  // await pc.current.setLocalDescription(answer)
+  // socket.emit('answer', answer)
+  //   }
+
+  //   async function handleAnswer(answer: any) {
+  // await createPeerConnection()
+
+  //     console.log(answer)
+  //     const desc = new RTCSessionDescription(answer)
+  //     await pc.current.setRemoteDescription(desc)
+  //   }
+
+  //   function handleICECandidateEvent(e: any) {
+  //     console.log(e)
+  //     if (e.candidate) {
+  //       socket.emit('ice-candidate', e.candidate)
+  //     }
+  //   }
+
+  //   async function handleCandidate(candidate: any) {
+  //     console.log(candidate)
+  // try {
+  //   if (!candidate.candidate) {
+  //     await pc.current.addIceCandidate(null)
+  //   } else {
+  //     await pc.current.addIceCandidate(candidate)
+  //   }
+  // } catch (error) {
+  //   console.log(error)
+  // }
+  //   }
+
+  //   function handleTrackEvent(e: any) {
+  //     remoteVideo.current.srcObject = e.streams[0]
+  //     console.log(remoteVideo)
+  //   }
+
+
+
+
+
+
+
+  async function createOffer() {
+    try {
+      const offer = await pc.current?.createOffer()
+      localStorage.setItem('offer', JSON.stringify(offer) as any)
+      await pc.current?.setLocalDescription(offer)
+      console.log(offer)
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  async function createAnswer() {
+    try {
+      const offer = await pc.current?.createAnswer()
+      localStorage.setItem('offer', JSON.stringify(offer) as any)
+      await pc.current?.setLocalDescription(offer)
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  function setRemoteDescription() {
+    const offer = JSON.parse(localStorage.getItem('offer') as any)
+    console.log(offer)
+    pc.current?.setRemoteDescription(new RTCSessionDescription(offer))
+  }
+
+  async function addIceCandidate() {
+    const candidate = JSON.parse(localStorage.getItem('offer') as any)
+    console.log('Adding candidate...', candidate)
+    console.log(candidate)
+    pc.current?.addIceCandidate(new RTCIceCandidate(candidate))
+  }
+
+  return (
+    <Stack w="100%" className={classes.huddle}>
+      {checked && (
+        <Stack w="100%">
+          <Flex align="center" justify="space-between">
+            <Text tt="lowercase" size="sm">
+              {selected?.isChannel && '#'}
+              {selected?.name}
+            </Text>
+            <Tooltip label="Open mini window" withArrow position="top">
+              <ActionIcon onClick={() => {}} variant="default" size={40}>
+                <FaRegWindowRestore size="1.3rem" />
+              </ActionIcon>
+            </Tooltip>
+          </Flex>
+
+          <Flex align="center" gap="sm">
+            <video autoPlay ref={localVideo} className={classes.video} />
+            <video autoPlay ref={remoteVideo} className={classes.video} />
+          </Flex>
+          <Flex gap="sm" align="center">
+            <button onClick={createOffer}>create offer</button>
+            <button onClick={createAnswer}>create answer</button>
+            <button onClick={setRemoteDescription}>setRemoteDescription</button>
+            <button onClick={addIceCandidate}>add candidate</button>

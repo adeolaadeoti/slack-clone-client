@@ -53,7 +53,7 @@ export const AppContextProvider = React.memo(({ children }: any) => {
   const [data, setData] = useState<any | null>(null)
   const [conversations, setConversations] = useState<any | null>(null)
   const [channels, setChannels] = useState<any | null>(null)
-  // const [channelData, setChannelData] = useState<any>(null)
+
   const theme = useMantineTheme()
   const router = useRouter()
   const { id, threadId } = router.query

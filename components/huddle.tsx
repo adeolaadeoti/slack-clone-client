@@ -8,9 +8,8 @@ import {
   Tooltip,
   createStyles,
 } from '@mantine/core'
-import adapter from 'webrtc-adapter'
 import React from 'react'
-import { BiMicrophone, BiScreenshot, BiVideo, BiWindow } from 'react-icons/bi'
+import { BiMicrophone, BiVideo } from 'react-icons/bi'
 import { BsRecord } from 'react-icons/bs'
 import { FaRegWindowRestore } from 'react-icons/fa'
 import { LuScreenShare } from 'react-icons/lu'
@@ -44,11 +43,11 @@ const config = {
 export default function Huddle({ selected, theme, socket, userId }: any) {
   const { classes } = useStyles()
 
-  const [checked, setChecked] = React.useState(true)
+  const [checked, setChecked] = React.useState(false)
   const localVideoRef = React.useRef<any>()
   const remoteVideoRef = React.useRef<any>()
-  const pcRef = React.useRef<RTCPeerConnection>()
   const targetUserIdRef = React.useRef<string | null>(null) // Store the target user's ID here
+  const pcRef = React.useRef<RTCPeerConnection>()
 
   async function setupWebRTC() {
     try {
@@ -75,7 +74,6 @@ export default function Huddle({ selected, theme, socket, userId }: any) {
       }
 
       pc.ontrack = (event) => {
-        // console.log(event.streams[0])
         if (remoteVideoRef.current)
           remoteVideoRef.current.srcObject = event.streams[0]
       }
@@ -85,14 +83,7 @@ export default function Huddle({ selected, theme, socket, userId }: any) {
       })
 
       pcRef.current = pc
-    } catch (error) {
-      console.log('Error setting up WebRTC:', error)
-    }
-  }
 
-  React.useEffect(() => {
-    if (checked) {
-      setupWebRTC()
       // Emit the "join-room" event when a user joins the room
       socket.emit('join-room', { roomId: selected?._id, userId })
       // Listen for the "join-room" event to trigger a call when another user joins
@@ -115,13 +106,27 @@ export default function Huddle({ selected, theme, socket, userId }: any) {
       socket.on('ice-candidate', (candidate: any) => {
         handleIceCandidate(candidate)
       })
+    } catch (error) {
+      console.log('Error setting up WebRTC:', error)
+    }
+  }
 
+  React.useEffect(() => {
+    if (checked) {
+      setupWebRTC()
       return () => {
         // Clean up resources (close the peer connection, stop media streams, etc.)
         if (pcRef.current) {
           pcRef.current.close()
         }
       }
+    }
+
+    return () => {
+      socket.off('join-room')
+      socket.off('offer')
+      socket.off('answer')
+      socket.off('ice-candidate')
     }
   }, [checked])
 
@@ -143,39 +148,39 @@ export default function Huddle({ selected, theme, socket, userId }: any) {
 
   // Function to initiate a call
   async function initiateCall(targetUserId: string) {
-    targetUserIdRef.current = targetUserId
-    // Create an SDP offer and send it to the target user
-    pcRef.current
-      ?.createOffer()
-      .then((offer) => {
-        return pcRef.current?.setLocalDescription(offer)
-      })
-      .then(() => {
-        const localDescription = pcRef.current?.localDescription
-        if (localDescription) {
-          // Send the offer along with the targetUserId
-          sendOffer(localDescription, targetUserId)
-        } else {
-          console.log('Local description is null')
-        }
-      })
-      .catch((error) => {
-        console.log('Error creating and sending offer:', error)
-      })
+    try {
+      targetUserIdRef.current = targetUserId
+
+      // Create an SDP offer
+      const offer = await pcRef.current?.createOffer()
+      await pcRef.current?.setLocalDescription(offer)
+
+      const localDescription = pcRef.current?.localDescription
+      if (localDescription) {
+        // Send the offer along with the targetUserId
+        sendOffer(localDescription, targetUserId)
+      } else {
+        console.log('Local description is null')
+      }
+    } catch (error) {
+      console.log('Error creating and sending offer:', error)
+    }
   }
 
   // Function to handle an incoming SDP offer
-  function handleOffer(offer: any) {
-    // Process the offer, create an answer, and send it back
-    pcRef.current
-      ?.setRemoteDescription(offer)
-      .then(() => pcRef.current?.createAnswer())
-      .then((answer) => {
-        return pcRef.current?.setLocalDescription(answer)
-      })
-      .then(() => {
-        sendAnswer(pcRef.current?.localDescription)
-      })
+  async function handleOffer(offer: any) {
+    try {
+      // Process the offer
+      await pcRef.current?.setRemoteDescription(offer)
+      // Create an answer
+      const answer = await pcRef.current?.createAnswer()
+      // Set the local description
+      await pcRef.current?.setLocalDescription(answer)
+      // Send the answer
+      sendAnswer(pcRef.current?.localDescription)
+    } catch (error) {
+      console.error('Error handling offer:', error)
+    }
   }
 
   // Function to handle an incoming SDP answer
@@ -191,7 +196,7 @@ export default function Huddle({ selected, theme, socket, userId }: any) {
     candidate = new RTCIceCandidate(candidate)
     console.log('Received ICE candidate:', candidate)
     // Add the received ICE candidate to the peer connection
-    pcRef.current?.addIceCandidate(candidate).catch((error) => {
+    pcRef.current?.addIceCandidate(candidate).catch((error: any) => {
       console.error('Error adding ICE candidate:', error)
     })
   }
@@ -213,19 +218,21 @@ export default function Huddle({ selected, theme, socket, userId }: any) {
           </Flex>
 
           <Flex align="center" gap="sm">
-            <video autoPlay ref={localVideoRef} className={classes.video} />
+            <video
+              autoPlay
+              playsInline
+              ref={localVideoRef}
+              className={classes.video}
+            />
             <video
               id="video"
               autoPlay
+              playsInline
               ref={remoteVideoRef}
               className={classes.video}
             />
           </Flex>
           <Flex gap="sm" align="center">
-            {/* <button onClick={createOffer}>create offer</button>
-            <button onClick={createAnswer}>create answer</button>
-            <button onClick={setRemoteDescription}>setRemoteDescription</button>
-            <button onClick={addIceCandidate}>add candidate</button> */}
             <Tooltip label="Mute mic" withArrow position="top">
               <ActionIcon onClick={() => {}} variant="default" size={40}>
                 <BiMicrophone size="1.7rem" />

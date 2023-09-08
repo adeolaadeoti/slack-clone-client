@@ -48,12 +48,7 @@ export default function Huddle({ selected, theme, socket, userId }: any) {
   const localVideoRef = React.useRef<any>()
   const remoteVideoRef = React.useRef<any>()
   const pcRef = React.useRef<RTCPeerConnection>()
-
-  React.useEffect(() => {
-    if (checked) {
-      setupWebRTC()
-    }
-  }, [checked])
+  const targetUserIdRef = React.useRef<string | null>(null) // Store the target user's ID here
 
   async function setupWebRTC() {
     try {
@@ -61,29 +56,28 @@ export default function Huddle({ selected, theme, socket, userId }: any) {
         audio: false,
         video: true,
       })
-
       localVideoRef.current.srcObject = stream
 
       const pc = new RTCPeerConnection(config)
 
-      pc.onicecandidate = (e) => {
-        if (e.candidate) {
-          console.log('ICE candidate:', e.candidate)
-          localStorage.setItem('candidate', JSON.stringify(e.candidate))
+      pc.onicecandidate = (event) => {
+        if (event.candidate) {
+          // Send ICE candidate to the other peer via Socket.io
+          socket.emit('ice-candidate', {
+            candidate: event.candidate,
+            targetUserId: userId,
+          })
         }
       }
 
       pc.onconnectionstatechange = (e) => {
         console.log('Connection state:', pc.connectionState)
-        console.log('Connection state:', pc)
       }
 
-      pc.ontrack = (e) => {
-        remoteVideoRef.current.srcObject = e.streams[0]
-      }
-
-      pc.onnegotiationneeded = async () => {
-        createOffer()
+      pc.ontrack = (event) => {
+        // console.log(event.streams[0])
+        if (remoteVideoRef.current)
+          remoteVideoRef.current.srcObject = event.streams[0]
       }
 
       stream.getTracks().forEach((track) => {
@@ -92,58 +86,114 @@ export default function Huddle({ selected, theme, socket, userId }: any) {
 
       pcRef.current = pc
     } catch (error) {
-      console.error('Error setting up WebRTC:', error)
+      console.log('Error setting up WebRTC:', error)
     }
   }
 
-  async function createOffer() {
-    try {
-      const offer = await pcRef.current?.createOffer()
-      await pcRef.current?.setLocalDescription(offer)
-      localStorage.setItem('offer', JSON.stringify(offer))
-      console.log('Offer created:', offer)
-    } catch (error) {
-      console.error('Error creating offer:', error)
-    }
-  }
+  React.useEffect(() => {
+    if (checked) {
+      setupWebRTC()
+      // Emit the "join-room" event when a user joins the room
+      socket.emit('join-room', { roomId: selected?._id, userId })
+      // Listen for the "join-room" event to trigger a call when another user joins
+      socket.on('join-room', ({ roomId, otherUserId }: any) => {
+        console.log(`User ${otherUserId} joined room ${roomId}`)
+        initiateCall(otherUserId)
+      })
 
-  async function createAnswer() {
-    try {
-      const offer = await pcRef.current?.createAnswer()
-      await pcRef.current?.setLocalDescription(offer)
-      localStorage.setItem('offer', JSON.stringify(offer))
-      console.log('Answer created:', offer)
-    } catch (error) {
-      console.error('Error creating answer:', error)
-    }
-  }
+      // Event listener for receiving SDP offers from other users
+      socket.on('offer', (offer: any) => {
+        handleOffer(offer)
+      })
 
-  function setRemoteDescription() {
-    const offer = JSON.parse(localStorage.getItem('offer') as string)
+      // Event listener for receiving SDP answers from other users
+      socket.on('answer', (answer: any) => {
+        handleAnswer(answer)
+      })
 
-    if (offer) {
-      pcRef.current
-        ?.setRemoteDescription(new RTCSessionDescription(offer))
-        .then(() => {
-          console.log('Remote description set successfully')
-        })
-        .catch((error) => {
-          console.error('Error setting remote description:', error)
-        })
-    }
-  }
+      // Event listener for receiving ICE candidates from other users
+      socket.on('ice-candidate', (candidate: any) => {
+        handleIceCandidate(candidate)
+      })
 
-  async function addIceCandidate() {
-    try {
-      const candidate = JSON.parse(localStorage.getItem('candidate') as string)
-
-      if (candidate) {
-        await pcRef.current?.addIceCandidate(new RTCIceCandidate(candidate))
-        console.log('ICE candidate added successfully:', candidate)
+      return () => {
+        // Clean up resources (close the peer connection, stop media streams, etc.)
+        if (pcRef.current) {
+          pcRef.current.close()
+        }
       }
-    } catch (error) {
-      console.error('Error adding ICE candidate:', error)
     }
+  }, [checked])
+
+  // Function to send an SDP offer to another user
+  function sendOffer(offer: any, targetUserId: string) {
+    if (targetUserIdRef.current) {
+      console.log('offer was sent', offer)
+      // Send the offer to the target user via Socket.io
+      socket.emit('offer', offer, targetUserId)
+    }
+  }
+
+  // Function to send an SDP answer to another user
+  function sendAnswer(answer: any) {
+    console.log('answer was sent', answer)
+    // Send the answer to the other user via Socket.io
+    socket.emit('answer', answer)
+  }
+
+  // Function to initiate a call
+  async function initiateCall(targetUserId: string) {
+    targetUserIdRef.current = targetUserId
+    // Create an SDP offer and send it to the target user
+    pcRef.current
+      ?.createOffer()
+      .then((offer) => {
+        return pcRef.current?.setLocalDescription(offer)
+      })
+      .then(() => {
+        const localDescription = pcRef.current?.localDescription
+        if (localDescription) {
+          // Send the offer along with the targetUserId
+          sendOffer(localDescription, targetUserId)
+        } else {
+          console.log('Local description is null')
+        }
+      })
+      .catch((error) => {
+        console.log('Error creating and sending offer:', error)
+      })
+  }
+
+  // Function to handle an incoming SDP offer
+  function handleOffer(offer: any) {
+    // Process the offer, create an answer, and send it back
+    pcRef.current
+      ?.setRemoteDescription(offer)
+      .then(() => pcRef.current?.createAnswer())
+      .then((answer) => {
+        return pcRef.current?.setLocalDescription(answer)
+      })
+      .then(() => {
+        sendAnswer(pcRef.current?.localDescription)
+      })
+  }
+
+  // Function to handle an incoming SDP answer
+  function handleAnswer(answer: any) {
+    // Set the remote description with the received answer
+    console.log('answer set as remote description')
+    pcRef.current?.setRemoteDescription(answer)
+  }
+
+  // Function to handle an incoming ICE candidate
+  function handleIceCandidate(candidate: any) {
+    // Add the received ICE candidate to the peer connection
+    candidate = new RTCIceCandidate(candidate)
+    console.log('Received ICE candidate:', candidate)
+    // Add the received ICE candidate to the peer connection
+    pcRef.current?.addIceCandidate(candidate).catch((error) => {
+      console.error('Error adding ICE candidate:', error)
+    })
   }
 
   return (
@@ -172,10 +222,10 @@ export default function Huddle({ selected, theme, socket, userId }: any) {
             />
           </Flex>
           <Flex gap="sm" align="center">
-            <button onClick={createOffer}>create offer</button>
+            {/* <button onClick={createOffer}>create offer</button>
             <button onClick={createAnswer}>create answer</button>
             <button onClick={setRemoteDescription}>setRemoteDescription</button>
-            <button onClick={addIceCandidate}>add candidate</button>
+            <button onClick={addIceCandidate}>add candidate</button> */}
             <Tooltip label="Mute mic" withArrow position="top">
               <ActionIcon onClick={() => {}} variant="default" size={40}>
                 <BiMicrophone size="1.7rem" />

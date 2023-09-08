@@ -88,8 +88,14 @@ export default function DefaultLayout({
   const [opened, { open, close }] = useDisclosure(false)
   const [inviteOpened, { open: inviteOpen, close: inviteClose }] =
     useDisclosure(false)
-  const { organisationId, setChannels, refreshApp, socket } = useAppContext()
-  const userId = data?.profile?._id
+  const {
+    organisationId,
+    setChannels,
+    refreshApp,
+    socket,
+    data: organisationData,
+  } = useAppContext()
+  const userId = organisationData?.profile?._id
 
   const form = useForm({
     initialValues: {
@@ -399,14 +405,14 @@ export default function DefaultLayout({
               ))}
             </Navbar.Section>
 
-            {/* <Navbar.Section className={classes.footer}> */}
-            <Huddle
-              selected={selected}
-              theme={theme}
-              socket={socket}
-              userId={userId}
-            />
-            {/* </Navbar.Section> */}
+            {userId && (
+              <Huddle
+                selected={selected}
+                theme={theme}
+                socket={socket}
+                userId={userId}
+              />
+            )}
           </Navbar>
         </Grid.Col>
 

@@ -10,6 +10,7 @@ import {
 } from '@mantine/core'
 import React from 'react'
 import { BiMicrophone, BiVideo } from 'react-icons/bi'
+import { BsRecord } from 'react-icons/bs'
 import { FaRegWindowRestore } from 'react-icons/fa'
 import { LuScreenShare } from 'react-icons/lu'
 import { TbHeadphones, TbHeadphonesOff } from 'react-icons/tb'
@@ -43,89 +44,67 @@ export default function Huddle({ selected, theme, socket, userId }: any) {
   const { classes } = useStyles()
 
   const [checked, setChecked] = React.useState(false)
-  const [connectedUsers, setConnectedUsers] = React.useState({})
   const localVideoRef = React.useRef<any>()
-  const remoteVideoRefs = React.useRef<
-    Record<string, React.RefObject<HTMLVideoElement>>
-  >({})
-  const pcRefs = React.useRef<Record<string, RTCPeerConnection>>({})
-
-  // Function to set up a peer connection and resolve when done
-  async function setupPeerConnection(user: string) {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      audio: false,
-      video: true,
-    })
-    localVideoRef.current.srcObject = stream
-    const pc = new RTCPeerConnection(config)
-    pc.onicecandidate = (event) => {
-      if (event.candidate) {
-        // Send ICE candidate to the other peer via Socket.io
-        socket.emit('ice-candidate', {
-          candidate: event.candidate,
-          senderUserId: user,
-        })
-      }
-    }
-
-    pc.onconnectionstatechange = (e) => {
-      console.log('Connection state:', pc.connectionState)
-    }
-
-    pc.ontrack = (event) => {
-      // Create a new video element
-      const newVideoElement = document.createElement('video')
-      newVideoElement.autoplay = true
-      newVideoElement.playsInline = true
-
-      // Set the srcObject to the event stream
-      newVideoElement.srcObject = event.streams[0]
-
-      // Find the container element by classname
-      const videoContainer = document.querySelector('.video-container')
-
-      if (videoContainer) {
-        // Append the new video element to the container
-        videoContainer.appendChild(newVideoElement)
-      }
-    }
-
-    stream.getTracks().forEach((track) => {
-      pc.addTrack(track, stream)
-    })
-
-    pcRefs.current[user] = pc
-  }
+  const remoteVideoRef = React.useRef<any>()
+  const targetUserIdRef = React.useRef<string | null>(null) // Store the target user's ID here
+  const pcRef = React.useRef<RTCPeerConnection>()
 
   async function setupWebRTC() {
     try {
-      await setupPeerConnection(userId)
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: true,
+      })
+      localVideoRef.current.srcObject = stream
 
-      // Emit the "join-room" event when the user starts the call
+      const pc = new RTCPeerConnection(config)
+
+      pc.onicecandidate = (event) => {
+        if (event.candidate) {
+          // Send ICE candidate to the other peer via Socket.io
+          socket.emit('ice-candidate', {
+            candidate: event.candidate,
+            targetUserId: userId,
+          })
+        }
+      }
+
+      pc.onconnectionstatechange = (e) => {
+        console.log('Connection state:', pc.connectionState)
+      }
+
+      pc.ontrack = (event) => {
+        if (remoteVideoRef.current)
+          remoteVideoRef.current.srcObject = event.streams[0]
+      }
+
+      stream.getTracks().forEach((track) => {
+        pc.addTrack(track, stream)
+      })
+
+      pcRef.current = pc
+
+      // Emit the "join-room" event when a user joins the room
       socket.emit('join-room', { roomId: selected?._id, userId })
-
       // Listen for the "join-room" event to trigger a call when another user joins
       socket.on('join-room', ({ roomId, otherUserId }: any) => {
         console.log(`User ${otherUserId} joined room ${roomId}`)
-        setConnectedUsers((prevUsers) => ({
-          ...prevUsers,
-          [otherUserId]: true,
-        }))
+        initiateCall(otherUserId)
       })
 
       // Event listener for receiving SDP offers from other users
-      socket.on('offer', ({ offer, senderUserId }: any) => {
-        handleOffer(offer, senderUserId)
+      socket.on('offer', (offer: any) => {
+        handleOffer(offer)
       })
 
       // Event listener for receiving SDP answers from other users
-      socket.on('answer', ({ answer, senderUserId }: any) => {
-        handleAnswer(answer, senderUserId)
+      socket.on('answer', (answer: any) => {
+        handleAnswer(answer)
       })
 
       // Event listener for receiving ICE candidates from other users
-      socket.on('ice-candidate', (candidate: any, senderUserId: string) => {
-        handleIceCandidate(candidate, senderUserId)
+      socket.on('ice-candidate', (candidate: any) => {
+        handleIceCandidate(candidate)
       })
     } catch (error) {
       console.log('Error setting up WebRTC:', error)
@@ -136,11 +115,9 @@ export default function Huddle({ selected, theme, socket, userId }: any) {
     if (checked) {
       setupWebRTC()
       return () => {
-        // Clean up resources (close the peer connections, stop media streams, etc.)
-        for (const user in pcRefs.current) {
-          if (pcRefs.current[user]) {
-            pcRefs.current[user].close()
-          }
+        // Clean up resources (close the peer connection, stop media streams, etc.)
+        if (pcRef.current) {
+          pcRef.current.close()
         }
       }
     }
@@ -153,44 +130,32 @@ export default function Huddle({ selected, theme, socket, userId }: any) {
     }
   }, [checked])
 
-  React.useEffect(() => {
-    async function setupPeerConnections() {
-      for (const user in connectedUsers) {
-        // // Wait for the peer connection to be set up
-        await setupPeerConnection(user)
-        // Trigger a call when another user joins
-        await initiateCall(user)
-      }
-    }
-    if (connectedUsers) {
-      setupPeerConnections()
-    }
-  }, [connectedUsers])
-
   // Function to send an SDP offer to another user
   function sendOffer(offer: any, targetUserId: string) {
-    if (targetUserId) {
+    if (targetUserIdRef.current) {
       console.log('offer was sent', offer)
       // Send the offer to the target user via Socket.io
-      socket.emit('offer', { offer, targetUserId })
+      socket.emit('offer', offer, targetUserId)
     }
   }
 
   // Function to send an SDP answer to another user
-  function sendAnswer(answer: any, senderUserId: string) {
+  function sendAnswer(answer: any) {
     console.log('answer was sent', answer)
     // Send the answer to the other user via Socket.io
-    socket.emit('answer', { answer, senderUserId })
+    socket.emit('answer', answer)
   }
 
   // Function to initiate a call
   async function initiateCall(targetUserId: string) {
     try {
-      // Create an SDP offer
-      const offer = await pcRefs.current[targetUserId]?.createOffer()
-      await pcRefs.current[targetUserId]?.setLocalDescription(offer)
+      targetUserIdRef.current = targetUserId
 
-      const localDescription = pcRefs.current[targetUserId]?.localDescription
+      // Create an SDP offer
+      const offer = await pcRef.current?.createOffer()
+      await pcRef.current?.setLocalDescription(offer)
+
+      const localDescription = pcRef.current?.localDescription
       if (localDescription) {
         // Send the offer along with the targetUserId
         sendOffer(localDescription, targetUserId)
@@ -203,40 +168,37 @@ export default function Huddle({ selected, theme, socket, userId }: any) {
   }
 
   // Function to handle an incoming SDP offer
-  async function handleOffer(offer: any, senderUserId: string) {
+  async function handleOffer(offer: any) {
     try {
-      // console.log(pcRefs.current[senderUserId], 'handle offer')
-      await pcRefs.current[senderUserId].setRemoteDescription(offer)
+      // Process the offer
+      await pcRef.current?.setRemoteDescription(offer)
       // Create an answer
-      const answer = await pcRefs.current[senderUserId].createAnswer()
+      const answer = await pcRef.current?.createAnswer()
       // Set the local description
-      await pcRefs.current[senderUserId].setLocalDescription(answer)
-      // Send the answer back to the sender
-      sendAnswer(pcRefs.current[senderUserId].localDescription, senderUserId)
+      await pcRef.current?.setLocalDescription(answer)
+      // Send the answer
+      sendAnswer(pcRef.current?.localDescription)
     } catch (error) {
       console.error('Error handling offer:', error)
     }
   }
 
   // Function to handle an incoming SDP answer
-  function handleAnswer(answer: any, senderUserId: string) {
-    console.log(senderUserId, 'handleAnswer')
+  function handleAnswer(answer: any) {
     // Set the remote description with the received answer
-    console.log('answer set as remote description', answer)
-    pcRefs.current[senderUserId]?.setRemoteDescription(answer)
+    console.log('answer set as remote description')
+    pcRef.current?.setRemoteDescription(answer)
   }
 
   // Function to handle an incoming ICE candidate
-  function handleIceCandidate(candidate: any, senderUserId: string) {
+  function handleIceCandidate(candidate: any) {
     // Add the received ICE candidate to the peer connection
     candidate = new RTCIceCandidate(candidate)
-    console.log('Received ICE candidate:', candidate, senderUserId)
+    console.log('Received ICE candidate:', candidate)
     // Add the received ICE candidate to the peer connection
-    pcRefs.current[senderUserId]
-      ?.addIceCandidate(candidate)
-      .catch((error: any) => {
-        console.error('Error adding ICE candidate:', error)
-      })
+    pcRef.current?.addIceCandidate(candidate).catch((error: any) => {
+      console.error('Error adding ICE candidate:', error)
+    })
   }
 
   return (
@@ -255,11 +217,18 @@ export default function Huddle({ selected, theme, socket, userId }: any) {
             </Tooltip>
           </Flex>
 
-          <Flex align="center" gap="sm" className="video-container">
+          <Flex align="center" gap="sm">
             <video
               autoPlay
               playsInline
               ref={localVideoRef}
+              className={classes.video}
+            />
+            <video
+              id="video"
+              autoPlay
+              playsInline
+              ref={remoteVideoRef}
               className={classes.video}
             />
           </Flex>

@@ -39,6 +39,12 @@ a {
   text-decoration: underline;
 }
 
+.video-container video {
+  height: 100px;
+  border-radius: 1rem;
+  border: 1px solid #373a40;
+}
+
 .toolbarClassName {
   background: #27282c !important;
   border: none !important;

@@ -67,7 +67,7 @@ const useStyles = createStyles((theme, { popupWindow, checked }: any) => ({
           }),
     },
     '.bg-img': {
-      // overflow: 'hidden',
+      overflow: 'hidden',
       ...(popupWindow
         ? {
             borderRadius: '15px',
@@ -191,7 +191,6 @@ export default function Huddle({
     }
 
     pc.ontrack = (event) => {
-      removeVideo()
       const stream = event.streams[0]
       const newVideoElement = document.createElement('video')
       newVideoElement.autoplay = true
@@ -240,7 +239,26 @@ export default function Huddle({
 
       // Listen for the "room-leave" event to remove the particular video
       socket.on('room-leave', async () => {
-        removeVideo()
+        // Get the .video-container element
+        const videoContainer = document.querySelector('.video-container')
+
+        if (videoContainer) {
+          // Get all the video elements within the .video-container
+          const videoElements = videoContainer.querySelectorAll('video')
+
+          // Check if there are at least two video elements
+          if (videoElements.length >= 2) {
+            // Remove the second video element (index 1)
+            const videoToRemove = videoElements[1]
+            // Remove the video element from the DOM
+            videoToRemove.remove()
+            // localStream.current.getTracks().forEach((track: any) => {
+            //   track.stop()
+            // })
+            // let stream = localVideoRef.current.srcObject.getTracks()
+            // stream.forEach((track: any) => track.stop())
+          }
+        }
       })
     } catch (error) {
       console.log('Error setting up WebRTC:', error)
@@ -280,36 +298,18 @@ export default function Huddle({
     }
   }, [connectedUsers])
 
-  function removeVideo() {
-    // Get the .video-container element
-    const videoContainer = document.querySelector('.video-container')
-
-    if (videoContainer) {
-      // Get all the video elements within the .video-container
-      const videoElements = videoContainer.querySelectorAll('video')
-
-      // Check if there are at least two video elements
-      if (videoElements.length >= 2) {
-        // Remove the second video element (index 1)
-        const videoToRemove = videoElements[1]
-        // Remove the video element from the DOM
-        videoToRemove.remove()
-      }
-    }
-  }
-
   async function handleHuddleRequest(e: any) {
     setChecked(e.currentTarget.checked)
     if (e.currentTarget.checked === false) {
       socket.emit('room-leave', { roomId: selected?._id, userId })
       setPopupWindow(false)
 
-      // if (screenSharing) {
-      //   stopScreenSharing() // Stop screen sharing when leaving the room
-      // } else {
-      let streams = await localVideoRef.current.srcObject.getTracks()
-      await streams.forEach((track: any) => track.stop())
-      // }
+      if (screenSharing) {
+        stopScreenSharing() // Stop screen sharing when leaving the room
+      } else {
+        let streams = await localVideoRef.current.srcObject.getTracks()
+        await streams.forEach((track: any) => track.stop())
+      }
     }
   }
 

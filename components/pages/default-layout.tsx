@@ -41,19 +41,6 @@ const useStyles = createStyles((theme) => ({
       borderTop: `1px solid ${theme.colors.dark[4]}`,
     },
   },
-  // footer: {
-  //   marginTop: 'auto',
-  //   marginBottom: theme.spacing.sm,
-  //   padding: theme.spacing.md,
-  //   display: 'flex',
-  //   alignItems: 'center',
-  //   justifyContent: 'space-between',
-  //   borderRadius: '1rem',
-
-  //   paddingTop: theme.spacing.md,
-  //   borderTop: `1px solid ${theme.colors.dark[4]}`,
-  // },
-
   collectionLink: {
     display: 'flex',
     gap: theme.spacing.sm,
@@ -181,6 +168,8 @@ export default function DefaultLayout({
     // setMessages([])
   }
 
+  const [popupWindow, setPopupWindow] = React.useState(false)
+
   return (
     <>
       <Modal
@@ -270,7 +259,7 @@ export default function DefaultLayout({
           span={2}
           p="0"
           style={{
-            position: 'relative',
+            ...(popupWindow ? { position: 'unset' } : { position: 'relative' }),
           }}
         >
           <Navbar>
@@ -405,12 +394,14 @@ export default function DefaultLayout({
               ))}
             </Navbar.Section>
 
-            {userId && (
+            {selected?.isConversation && !selected?.isSelf && (
               <Huddle
                 selected={selected}
                 theme={theme}
                 socket={socket}
                 userId={userId}
+                popupWindow={popupWindow}
+                setPopupWindow={setPopupWindow}
               />
             )}
           </Navbar>

@@ -1,5 +1,6 @@
 import {
   Avatar,
+  Center,
   Flex,
   Modal,
   MultiSelect,
@@ -48,6 +49,9 @@ export default function MessageLayout({
 }: any) {
   const { classes } = useStyles()
   const [isDisabled, setIsDisabled] = React.useState(true)
+  const [channelCollaborators, setChannelCollaborators] = React.useState(
+    data?.collaborators?.map((d: any) => d._id)
+  )
 
   const isLoading = !data?.name
   const [opened, { open, close }] = useDisclosure(false)
@@ -101,6 +105,35 @@ export default function MessageLayout({
     }
   })
 
+  const joinMutation = useMutation({
+    mutationFn: () => {
+      return axios.post(`/channel/${data?._id}`, {
+        userId: organisationData?.profile?._id,
+      })
+    },
+    onError(error: any) {
+      notifications.show({
+        message: error?.response?.data?.data?.name,
+        color: 'red',
+        p: 'md',
+      })
+    },
+    onSuccess() {
+      refreshApp()
+      setChannelCollaborators((collaborators: string[]) => [
+        ...collaborators,
+        organisationData?.profile?._id,
+      ])
+      notifications.show({
+        message: `You've joined the ${data?.name} successfully`,
+        color: 'green',
+        p: 'md',
+      })
+    },
+  })
+
+
+
   return (
     <>
       <Modal
@@ -145,6 +178,7 @@ export default function MessageLayout({
           data={coWorkersSelect}
           placeholder="Select a teammate"
         />
+
         <Text fz="xs" mt="lg">
           Expand your team collaboration by inviting your teammates to join the
           #{data?.name} channel. Share insights, and achieve more together.
@@ -255,8 +289,39 @@ export default function MessageLayout({
             messages={messages}
             setMessages={setMessages}
             data={data}
+            open={open}
+            channelCollaborators={channelCollaborators}
           />
         )}
+
+        {!channelCollaborators?.includes(organisationData?.profile?._id) &&
+          data?.isChannel && (
+            <Center>
+              <Paper radius="lg" p="xl" withBorder mt="-4rem">
+                <Text align="center" fz="sm" mb="md">
+                  Ready to dive into the world of{' '}
+                  <Text span fw="bold">
+                    {' '}
+                    #{data?.name}
+                  </Text>
+                  ? <br /> Join the conversation, collaborate with your team,
+                  and make things happen!
+                </Text>
+                <Center>
+                  <Button
+                    disabled={joinMutation.isLoading}
+                    onClick={() => joinMutation.mutate()}
+                    loading={joinMutation.isLoading}
+                    type="submit"
+                  >
+                    <Text align="center">
+                      {joinMutation.isLoading ? '' : 'Join Channel'}
+                    </Text>
+                  </Button>
+                </Center>
+              </Paper>
+            </Center>
+          )}
       </Flex>
     </>
   )

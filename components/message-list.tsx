@@ -306,10 +306,11 @@ export default function MessageList({ userId, messages, isThread }: any) {
                       </Avatar>
                     ))}
                   </Flex>
-
-                  <Text fz="xs" c={theme.colors.dark[2]}>
-                    {msg.threadRepliesCount} replies
-                  </Text>
+                  {msg.threadRepliesCount && (
+                    <Text fz="xs" c={theme.colors.dark[2]}>
+                      {msg.threadRepliesCount} replies
+                    </Text>
+                  )}
                   <Text
                     fz="xs"
                     c={theme.colors.dark[3]}

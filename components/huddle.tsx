@@ -31,7 +31,9 @@ const useStyles = createStyles((theme, { popupWindow, checked }: any) => ({
           top: '50%',
           transform: 'translate(-50%, -50%)',
           width: '70% !important',
-          height: '51%',
+          height: '69%',
+          border: `1px solid ${theme.colors.dark[4]}`,
+
           transition:
             'left 0.3s ease, top 0.3s ease, transform 0.3s ease, width 0.3s ease, height 0.3s ease',
         }
@@ -40,6 +42,7 @@ const useStyles = createStyles((theme, { popupWindow, checked }: any) => ({
           top: 'unset',
           transform: 'unset',
           width: '100%',
+          borderTop: `1px solid ${theme.colors.dark[4]}`,
 
           transition:
             'left 0.3s ease, top 0.3s ease, transform 0.3s ease, width 0.3s ease',
@@ -48,7 +51,6 @@ const useStyles = createStyles((theme, { popupWindow, checked }: any) => ({
     padding: theme.spacing.md,
     borderRadius: '1rem',
     paddingTop: theme.spacing.md,
-    borderTop: `1px solid ${theme.colors.dark[4]}`,
     backgroundColor: theme.colors.dark[7],
 
     video: {
@@ -59,8 +61,10 @@ const useStyles = createStyles((theme, { popupWindow, checked }: any) => ({
             objectFit: 'cover',
             borderRadius: '1rem',
             border: `2px solid ${theme.colors.dark[3]}`,
+            marginBlock: '10rem',
           }
         : {
+            marginBlock: '2rem',
             height: '60px',
             borderRadius: '1rem',
             border: '1px solid #373a40',
@@ -147,59 +151,61 @@ export default function Huddle({
   }
 
   // Function to set up a peer connection and resolve when done
-  async function setupPeerConnection(user: string, isScreen?: boolean) {
-    if (screenSharing) {
-      localStream.current = await navigator.mediaDevices.getDisplayMedia({
-        video: true,
-      })
-    } else {
-      localStream.current = await navigator.mediaDevices.getUserMedia({
-        audio: audioEnabled,
-        video: true,
-      })
-    }
-    localVideoRef.current!.srcObject = localStream.current
-
-    const pc = new RTCPeerConnection(config)
-    pc.onicecandidate = (event) => {
-      if (event.candidate) {
-        socket.emit('ice-candidate', {
-          roomId: selected?._id,
-          candidate: event.candidate,
-          senderUserId: user,
+  async function setupPeerConnection(user: string) {
+    try {
+      if (screenSharing) {
+        localStream.current = await navigator.mediaDevices.getDisplayMedia({
+          video: true,
+        })
+      } else {
+        localStream.current = await navigator.mediaDevices.getUserMedia({
+          audio: audioEnabled,
+          video: true,
         })
       }
-    }
+      localVideoRef.current!.srcObject = localStream.current
 
-    pc.onconnectionstatechange = (e) => {
-      console.log('Connection state:', pc.connectionState)
-    }
-
-    pc.ontrack = (event) => {
-      removeVideo()
-      const stream = event.streams[0]
-      const newVideoElement = document.createElement('video')
-      newVideoElement.autoplay = true
-      newVideoElement.playsInline = true
-      newVideoElement.srcObject = stream
-
-      const videoContainer = document.querySelector('.video-container')
-
-      if (videoContainer) {
-        videoContainer.appendChild(newVideoElement)
+      const pc = new RTCPeerConnection(config)
+      pc.onicecandidate = (event) => {
+        if (event.candidate) {
+          socket.emit('ice-candidate', {
+            roomId: selected?._id,
+            candidate: event.candidate,
+            senderUserId: user,
+          })
+        }
       }
-    }
 
-    localStream.current.getTracks().forEach((track: any) => {
-      pc.addTrack(track, localStream.current)
-    })
+      pc.onconnectionstatechange = (e) => {
+        console.log('Connection state:', pc.connectionState)
+      }
 
-    pcRefs.current[user] = pc
+      pc.ontrack = (event) => {
+        removeVideo()
+        const stream = event.streams[0]
+        const newVideoElement = document.createElement('video')
+        newVideoElement.autoplay = true
+        newVideoElement.playsInline = true
+        newVideoElement.srcObject = stream
+
+        const videoContainer = document.querySelector('.video-container')
+
+        if (videoContainer) {
+          videoContainer.appendChild(newVideoElement)
+        }
+      }
+
+      localStream.current.getTracks().forEach((track: any) => {
+        pc.addTrack(track, localStream.current)
+      })
+
+      pcRefs.current[user] = pc
+    } catch (error) {}
   }
 
-  async function setupWebRTC(isScreen?: boolean) {
+  async function setupWebRTC() {
     try {
-      await setupPeerConnection(userId, isScreen)
+      await setupPeerConnection(userId)
       // Emit the "join-room" event when the user starts the call
       socket.emit('join-room', { roomId: selected?._id, userId })
       // Listen for the "join-room" event to trigger a call when another user joins
@@ -424,7 +430,6 @@ export default function Huddle({
           </Flex>
           <BackgroundImage src="/huddle.png" className="bg-img">
             <Flex
-              my="md"
               align="center"
               justify="center"
               gap="sm"

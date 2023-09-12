@@ -250,10 +250,12 @@ export default function Thread() {
               </Flex>
             </Flex>
           </Flex>
-          <Divider
-            px="sm"
-            label={`${selectedMessage?.threadRepliesCount} replies`}
-          />
+          {selectedMessage?.threadRepliesCount && (
+            <Divider
+              px="sm"
+              label={`${selectedMessage?.threadRepliesCount} replies`}
+            />
+          )}
         </Flex>
       )}
       <Message isThread />

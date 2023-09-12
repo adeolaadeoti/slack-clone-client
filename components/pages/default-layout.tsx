@@ -169,7 +169,6 @@ export default function DefaultLayout({
   }
 
   const [popupWindow, setPopupWindow] = React.useState(false)
-
   return (
     <>
       <Modal
@@ -365,10 +364,10 @@ export default function DefaultLayout({
                     color={getColorByIndex(index)}
                     radius="xl"
                   >
-                    {convo?.name[0].toLowerCase()}
+                    {convo?.name?.[0].toLowerCase()}
                   </Avatar>
                   {convo.name}{' '}
-                  {convo.isOnline ? (
+                  {convo.isOnline || convo.isSelf ? (
                     <Box
                       h=".7rem"
                       w=".7rem"

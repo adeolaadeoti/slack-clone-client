@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import {
   Avatar,
+  Center,
   Flex,
   Loader,
   Paper,
@@ -29,6 +30,8 @@ const Message = ({
   theme,
   type,
   isThread = false,
+  open,
+  channelCollaborators
 }: any) => {
   const router = useRouter()
   const { threadId } = router.query
@@ -41,7 +44,7 @@ const Message = ({
     threadMessages,
     setThreadMessages,
   } = useAppContext()
-  const channelCollaborators = data?.collaborators?.map((d: any) => d._id)
+  // const channelCollaborators = data?.collaborators?.map((d: any) => d._id)
   const userId = organisationData?.profile?._id
   const conversationCollaborators = conversations?.map((conversation: any) => {
     return conversation.collaborators.map(
@@ -246,7 +249,12 @@ const Message = ({
                       Edit description
                     </UnstyledButton>
                   </Text>
-                  <UnstyledButton mt="lg" fz="sm" c={theme.colors.blue[5]}>
+                  <UnstyledButton
+                    mt="lg"
+                    fz="sm"
+                    c={theme.colors.blue[5]}
+                    onClick={open}
+                  >
                     <Flex align="center" justify="start" gap="xs">
                       <BiUserPlus size="2.2rem" />
                       <Text>Add people</Text>
@@ -291,12 +299,6 @@ const Message = ({
                           Edit description
                         </UnstyledButton>
                       </Text>
-                      <UnstyledButton mt="lg" fz="sm" c={theme.colors.blue[5]}>
-                        <Flex align="center" justify="start" gap="xs">
-                          <BiUserPlus size="2.2rem" />
-                          <Text>Add people</Text>
-                        </Flex>
-                      </UnstyledButton>
                     </>
                   )}
                 </>
@@ -362,9 +364,6 @@ const Message = ({
             }}
           />
         </Paper>
-      )}
-      {data?.isChannel && !channelCollaborators?.includes(userId) && (
-        <Text>Join Channel</Text>
       )}
     </>
   )

@@ -75,7 +75,7 @@ export const AppContextProvider = React.memo(({ children }: any) => {
     ['organisation', organisationId],
     () => axios.get(`/organisation/${organisationId}`),
     {
-      enabled: !!organisationId,
+      enabled: !!organisationId && router.pathname.startsWith('/c'),
       refetchOnMount: false,
       onSuccess: (data) => {
         setData(data?.data?.data)
@@ -134,7 +134,7 @@ export const AppContextProvider = React.memo(({ children }: any) => {
     [`conversations`, id],
     () => axios.get(`/conversations/${id}`),
     {
-      enabled: !!id && channel === false,
+      enabled: !!id && channel === false && router.pathname.startsWith('/c'),
       refetchOnMount: false,
 
       onSuccess: async (data) => {
@@ -153,7 +153,6 @@ export const AppContextProvider = React.memo(({ children }: any) => {
         params: {
           conversation: selected?._id,
           organisation: organisationId,
-          isSelf: selected?.isSelf,
         },
       }),
     {
@@ -213,20 +212,41 @@ export const AppContextProvider = React.memo(({ children }: any) => {
     }
   }, [id, messages, threadMessages, selectedMessage])
 
+  const handleFocus = () => {
+    // User's window is focused, emit "user-join"
+    if (data) {
+      socket.emit('user-join', { id: data?.profile?._id, isOnline: true })
+    }
+  }
+
+  const handleBlur = () => {
+    // User's window is not focused, emit "user-leave"
+    if (data) {
+      socket.emit('user-leave', { id: data?.profile?._id, isOnline: false })
+    }
+  }
+
   React.useEffect(() => {
     setOrganisationId(localStorage.getItem('organisationId') as string)
     socket.connect()
     if (data) {
       setChannels(data?.channels)
-      socket.emit('user-join', { id: data?.profile?._id, isOnline: true })
+      // setConversations(data?.conversations)
       socket.on('user-join', ({ id, isOnline }) => {
         updateUserStatus(id, isOnline)
       })
       socket.on('user-leave', ({ id, isOnline }) => {
         updateUserStatus(id, isOnline)
       })
+
+      window.addEventListener('focus', handleFocus)
+      window.addEventListener('blur', handleBlur)
     }
+
     return () => {
+      // Remove the event listeners when the component unmounts
+      window.removeEventListener('focus', handleFocus)
+      window.removeEventListener('blur', handleBlur)
       socket.off('user-join')
       socket.off('user-leave')
       socket.disconnect()

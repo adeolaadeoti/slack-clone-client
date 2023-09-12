@@ -71,8 +71,6 @@ export const AppContextProvider = React.memo(({ children }: any) => {
   const [canQueryConversationMessages, setCanQueryConversationMessages] =
     React.useState(false)
 
-  // const browser = useQuery(['browser'], () => ) 
-
   const query = useQuery(
     ['organisation', organisationId],
     () => axios.get(`/organisation/${organisationId}`),
@@ -233,7 +231,7 @@ export const AppContextProvider = React.memo(({ children }: any) => {
     socket.connect()
     if (data) {
       setChannels(data?.channels)
-      // setConversations(data?.conversations)
+      setConversations(data?.conversations)
       socket.on('user-join', ({ id, isOnline }) => {
         updateUserStatus(id, isOnline)
       })

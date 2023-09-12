@@ -135,6 +135,17 @@ export default function MessageList({ userId, messages, isThread }: any) {
           return (
             <Divider
               key={msg.id}
+              styles={{
+                label: {
+                  '& > div': {
+                    backgroundColor: theme.colors.dark[7],
+                  },
+                },
+              }}
+              style={{
+                position: 'sticky',
+                top: 10,
+              }}
               label={
                 <Text size="xs" px="md" color="white" className={classes.date}>
                   {msg.content}

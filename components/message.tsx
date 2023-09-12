@@ -23,7 +23,6 @@ import { notifications } from '@mantine/notifications'
 import MessageList from './message-list'
 import { useRouter } from 'next/router'
 import { GoMegaphone } from 'react-icons/go'
-import ChatLink from './chat-link'
 
 const Message = ({
   data,
@@ -47,7 +46,6 @@ const Message = ({
     selected,
     threadMessages,
   } = useAppContext()
-  // const channelCollaborators = data?.collaborators?.map((d: any) => d._id)
   const userId = organisationData?.profile?._id
   const conversationCollaborators = conversations?.map((conversation: any) => {
     return conversation.collaborators.map(
@@ -79,7 +77,11 @@ const Message = ({
           entityToHTML: (entity, originalText) => {
             if (entity.type === 'LINK') {
               const { url } = entity.data
-              return <ChatLink url={url}>{originalText}</ChatLink>
+              return (
+                <a className="entity-link" target="_blank" href={url}>
+                  {originalText}
+                </a>
+              )
             } else if (entity.type === 'MENTION' || entity.type === 'HASHTAG') {
               return <span className="entity-mention">{originalText}</span>
             }
@@ -87,6 +89,10 @@ const Message = ({
             return originalText
           },
         })(contentState)
+
+        if (htmlContent.includes('@<')) {
+          return false
+        }
 
         const message = {
           sender: userId,
@@ -165,7 +171,6 @@ const Message = ({
             })
             return
           } else if (exists) {
-            console.log('convo')
             notifications.show({
               title: newMessage?.sender?.username,
               message: truncateDraftToHtml(newMessage?.content),

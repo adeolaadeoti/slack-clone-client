@@ -31,7 +31,7 @@ const useStyles = createStyles((theme, { popupWindow, checked }: any) => ({
           top: '50%',
           transform: 'translate(-50%, -50%)',
           width: '70% !important',
-          height: '60%',
+          height: '51%',
           transition:
             'left 0.3s ease, top 0.3s ease, transform 0.3s ease, width 0.3s ease, height 0.3s ease',
         }
@@ -54,7 +54,7 @@ const useStyles = createStyles((theme, { popupWindow, checked }: any) => ({
     video: {
       ...(popupWindow
         ? {
-            height: '41rem',
+            height: '32.5rem',
             width: '45%',
             objectFit: 'cover',
             borderRadius: '1rem',
@@ -109,7 +109,6 @@ export default function Huddle({
   const [audioEnabled, setAudioEnabled] = React.useState(false)
 
   const [screenSharing, setScreenSharing] = React.useState(false)
-  const [screenStream, setScreenStream] = React.useState<MediaStream | null>()
 
   const startScreenSharing = async () => {
     try {
@@ -120,25 +119,12 @@ export default function Huddle({
     }
   }
 
-  const stopScreenSharing = () => {
-    if (screenStream) {
-      // Remove the screen sharing stream from the peer connections
-      for (const user in pcRefs.current) {
-        const tracks = pcRefs.current[user].getSenders()
-        const screenTrack = tracks.find(
-          (track) => track.track === screenStream.getTracks()[0]
-        )
-        if (screenTrack) {
-          pcRefs.current[user].removeTrack(screenTrack)
-        }
-      }
-
-      // Stop the screen sharing stream
-      screenStream.getTracks().forEach((track) => track.stop())
-
-      // Update state to reflect stopping screen sharing
-      setScreenStream(null)
+  const stopScreenSharing = async () => {
+    try {
+      await setupWebRTC(false)
       setScreenSharing(false)
+    } catch (error) {
+      console.error('Error starting screen sharing:', error)
     }
   }
 

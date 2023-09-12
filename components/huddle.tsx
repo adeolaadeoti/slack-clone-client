@@ -112,19 +112,19 @@ export default function Huddle({
 
   const startScreenSharing = async () => {
     try {
-      await setupWebRTC(true)
+      // await setupWebRTC(true)
       setScreenSharing(true)
     } catch (error) {
-      console.error('Error starting screen sharing:', error)
+      console.log('Error starting screen sharing:', error)
     }
   }
 
   const stopScreenSharing = async () => {
     try {
-      await setupWebRTC(false)
+      // await setupWebRTC(false)
       setScreenSharing(false)
     } catch (error) {
-      console.error('Error starting screen sharing:', error)
+      console.log('Error starting screen sharing:', error)
     }
   }
 
@@ -138,24 +138,23 @@ export default function Huddle({
   }
 
   // Function to toggle user media audio
-  const toggleAudio = () => {
-    const tracks = localStream.current.getAudioTracks()
-    if (tracks.length > 0) {
-      tracks[0].enabled = !audioEnabled
+  const toggleAudio = async () => {
+    try {
       setAudioEnabled(!audioEnabled)
+    } catch (error) {
+      console.log(error)
     }
   }
 
   // Function to set up a peer connection and resolve when done
   async function setupPeerConnection(user: string, isScreen?: boolean) {
-    if (isScreen) {
+    if (screenSharing) {
       localStream.current = await navigator.mediaDevices.getDisplayMedia({
-        audio: false,
         video: true,
       })
     } else {
       localStream.current = await navigator.mediaDevices.getUserMedia({
-        audio: false,
+        audio: audioEnabled,
         video: true,
       })
     }
@@ -252,7 +251,7 @@ export default function Huddle({
       socket.off('answer')
       socket.off('ice-candidate')
     }
-  }, [checked])
+  }, [checked, audioEnabled, screenSharing])
 
   React.useEffect(() => {
     async function setupPeerConnections() {
@@ -295,6 +294,10 @@ export default function Huddle({
       // } else {
       let streams = await localVideoRef.current.srcObject.getTracks()
       await streams.forEach((track: any) => track.stop())
+
+      if (pcRefs.current[userId]) {
+        pcRefs.current[userId].close()
+      }
       // }
     }
   }
@@ -431,29 +434,45 @@ export default function Huddle({
             </Flex>
           </BackgroundImage>
           <Flex gap="sm" align="center">
-            <Tooltip label="Mute mic" withArrow position="top">
+            <Tooltip
+              label={`${!audioEnabled ? 'Unmute' : 'Mute'} mic`}
+              withArrow
+              position="top"
+            >
               <ActionIcon onClick={toggleAudio} variant="default" size={40}>
-                {audioEnabled ? (
+                {!audioEnabled ? (
                   <BiMicrophoneOff size="1.7rem" />
                 ) : (
                   <BiMicrophone size="1.7rem" />
                 )}
               </ActionIcon>
             </Tooltip>
-            <Tooltip label="Turn on video" withArrow position="top">
+            <Tooltip
+              label={`Turn ${videoEnabled ? 'off' : 'on'} video`}
+              withArrow
+              position="top"
+            >
               <ActionIcon onClick={toggleVideo} variant="default" size={40}>
-                {videoEnabled ? (
+                {!videoEnabled ? (
                   <BiVideoOff size="2rem" />
                 ) : (
                   <BiVideo size="2rem" />
                 )}
               </ActionIcon>
             </Tooltip>
-            <Tooltip label="Share screen" withArrow position="top">
+
+            <Tooltip
+              label={`${screenSharing ? 'Stop' : 'Start'} Sharing screen`}
+              withArrow
+              position="top"
+            >
               <ActionIcon
                 onClick={screenSharing ? stopScreenSharing : startScreenSharing}
                 variant="default"
                 size={40}
+                gradient={
+                  screenSharing ? theme.colors.red : theme.colors.dark[4]
+                }
               >
                 {screenSharing ? (
                   <LuScreenShareOff size="1.6rem" />
@@ -462,6 +481,7 @@ export default function Huddle({
                 )}
               </ActionIcon>
             </Tooltip>
+
             <Switch
               ml="auto"
               checked={checked}

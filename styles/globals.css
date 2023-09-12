@@ -106,3 +106,41 @@ a {
   background-color: #27282c !important;
   border: 1px solid #404146 !important;
 }
+
+.rdw-suggestion-dropdown {
+  background-color: #27282c !important;
+  bottom: 22px !important;
+  left: -5px !important;
+  border: unset !important;
+  border-radius: 0.5rem !important;
+  box-shadow: 1px 2px 15px #1c1d20 !important;
+  min-width: 40rem !important;
+  padding-block: 0.75rem !important;
+}
+
+.rdw-suggestion-option {
+  border: unset !important;
+  padding: 0.5rem 1.5rem !important;
+  font-size: 1.5rem !important;
+  /* font-weight: 600; */
+}
+
+.rdw-suggestion-option:hover,
+.rdw-suggestion-option-active {
+  background-color: rgb(23, 82, 127) !important;
+  cursor: pointer !important;
+}
+
+.rdw-editor-main {
+  overflow: unset !important;
+}
+
+.rdw-mention-link,
+.entity-mention {
+  background-color: rgba(171, 107, 34, 0.4) !important;
+}
+
+.editorClassName a,
+.entity-mention {
+  color: rgb(249, 212, 100) !important;
+}

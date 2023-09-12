@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import {
   Avatar,
+  Box,
   Center,
   Flex,
   Loader,
@@ -14,12 +15,15 @@ import { EditorState } from 'draft-js'
 import { Editor } from 'react-draft-wysiwyg'
 import { convertToHTML } from 'draft-convert'
 import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css'
+import 'draft-js-mention-plugin/lib/plugin.css'
 import { useAppContext } from '../providers/app-provider'
 import { BiEditAlt, BiUserPlus } from 'react-icons/bi'
 import { truncateDraftToHtml } from '../utils/helpers'
 import { notifications } from '@mantine/notifications'
 import MessageList from './message-list'
 import { useRouter } from 'next/router'
+import { GoMegaphone } from 'react-icons/go'
+import ChatLink from './chat-link'
 
 const Message = ({
   data,
@@ -31,7 +35,7 @@ const Message = ({
   type,
   isThread = false,
   open,
-  channelCollaborators
+  channelCollaborators,
 }: any) => {
   const router = useRouter()
   const { threadId } = router.query
@@ -42,7 +46,6 @@ const Message = ({
     conversations,
     selected,
     threadMessages,
-    setThreadMessages,
   } = useAppContext()
   // const channelCollaborators = data?.collaborators?.map((d: any) => d._id)
   const userId = organisationData?.profile?._id
@@ -76,11 +79,9 @@ const Message = ({
           entityToHTML: (entity, originalText) => {
             if (entity.type === 'LINK') {
               const { url } = entity.data
-              return (
-                <a target="_blank" href={url}>
-                  {originalText}
-                </a>
-              )
+              return <ChatLink url={url}>{originalText}</ChatLink>
+            } else if (entity.type === 'MENTION' || entity.type === 'HASHTAG') {
+              return <span className="entity-mention">{originalText}</span>
             }
 
             return originalText
@@ -188,6 +189,61 @@ const Message = ({
       stackRef.current?.scrollTo(0, stackRef.current.scrollHeight)
     }
   }, [messages])
+
+  let suggestions = organisationData?.coWorkers?.map((user: any) => {
+    return {
+      text: (
+        <Flex align="center" gap="sm">
+          <Avatar src={`/avatars/${user.username[0]}.png`} size="sm" />
+          <Text fz="sm">
+            {user.username} {userId === user._id && '(you)'}
+          </Text>
+          {user.isOnline || userId === user._id ? (
+            <Box
+              h=".7rem"
+              w=".7rem"
+              bg="green"
+              style={{
+                borderRadius: '5rem',
+              }}
+            ></Box>
+          ) : (
+            <Box
+              h=".7rem"
+              w=".7rem"
+              bg="gray"
+              style={{
+                borderRadius: '5rem',
+              }}
+            ></Box>
+          )}
+        </Flex>
+      ),
+      value: user.username,
+    }
+  })
+
+  suggestions = [
+    ...suggestions,
+    {
+      text: (
+        <Flex align="center" gap="sm">
+          <GoMegaphone />
+          <Text fz="sm">@channel Notify everyone in this channel.</Text>
+        </Flex>
+      ),
+      value: 'channel',
+    },
+    {
+      text: (
+        <Flex align="center" gap="sm">
+          <GoMegaphone />
+          <Text fz="sm">@here Notify every online member in this channel.</Text>
+        </Flex>
+      ),
+      value: 'here',
+    },
+  ]
 
   return (
     <>
@@ -338,6 +394,15 @@ const Message = ({
               data?.isChannel ? '#' : ''
             }${selected?.name?.toLowerCase()}`}
             editorState={editorState}
+            hashtag={{
+              separator: ' ',
+              trigger: '#',
+            }}
+            mention={{
+              separator: ' ',
+              trigger: '@',
+              suggestions,
+            }}
             toolbarClassName="toolbarClassName"
             wrapperClassName="wrapperClassName"
             editorClassName="editorClassName"

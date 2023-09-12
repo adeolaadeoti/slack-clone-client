@@ -71,6 +71,8 @@ export const AppContextProvider = React.memo(({ children }: any) => {
   const [canQueryConversationMessages, setCanQueryConversationMessages] =
     React.useState(false)
 
+  // const browser = useQuery(['browser'], () => ) 
+
   const query = useQuery(
     ['organisation', organisationId],
     () => axios.get(`/organisation/${organisationId}`),

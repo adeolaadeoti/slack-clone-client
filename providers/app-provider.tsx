@@ -182,8 +182,8 @@ export const AppContextProvider = React.memo(({ children }: any) => {
   )
 
   React.useEffect(() => {
+    setOrganisationId(localStorage.getItem('organisationId') as string)
     setChannel(localStorage.getItem('channel') === 'true' ? true : false)
-
     socket.on('message-updated', ({ id, message, isThread }) => {
       if (id === selectedMessage?._id) {
         setSelectedMessage(message)
@@ -227,7 +227,6 @@ export const AppContextProvider = React.memo(({ children }: any) => {
   }
 
   React.useEffect(() => {
-    setOrganisationId(localStorage.getItem('organisationId') as string)
     socket.connect()
     if (data) {
       setChannels(data?.channels)
@@ -295,7 +294,7 @@ export const AppContextProvider = React.memo(({ children }: any) => {
     }
   }, [data, id])
 
-  if (query.isLoading && router.pathname.includes('c/'))
+  if (query.isLoading && query.data)
     return (
       <Center p="xl" h="100vh" w="100vw" bg={theme.colors.dark[9]}>
         <Flex gap={10} align="center" w="30%" mx="auto">

@@ -132,8 +132,6 @@ export default function MessageLayout({
     },
   })
 
-
-
   return (
     <>
       <Modal

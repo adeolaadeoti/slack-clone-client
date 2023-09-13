@@ -48,7 +48,7 @@ a {
   border-top-right-radius: 1rem !important;
 }
 
-.toolbarClassName img {
+.rdw-option-wrapper img {
   filter: invert(100%) sepia(2%) saturate(1333%) hue-rotate(202deg)
     brightness(75%) contrast(87%);
 }
@@ -66,6 +66,7 @@ a {
   background-color: #27282c !important;
   min-height: 8rem !important;
   font-size: 1.5rem !important;
+  font-family: inherit !important;
 }
 .editorClassName a {
   color: #339af0 !important;
@@ -82,13 +83,14 @@ a {
 }
 
 .rdw-emoji-modal,
-.rdw-link-modal {
+.rdw-link-modal,
+.rdw-image-modal {
   background-color: #27282c !important;
   border: 1px solid #404146 !important;
   bottom: 2.5rem !important;
   top: unset !important;
   box-shadow: unset !important;
-  height: 27rem !important;
+  /* height: 27rem !important; */
   border-radius: 1rem !important;
 }
 .rdw-link-modal {
@@ -143,4 +145,67 @@ a {
 .editorClassName a,
 .entity-mention {
   color: rgb(249, 212, 100) !important;
+}
+
+.rdw-image-modal-header-option {
+  border: unset !important;
+  font-size: 1.4rem !important;
+}
+.rdw-image-modal-header-label {
+  border: unset !important;
+}
+.rdw-image-modal-header-label-highlighted {
+  border-bottom: 2px solid #0a66b7 !important;
+}
+.rdw-image-modal-alt-input,
+.rdw-image-modal-size-input,
+.rdw-image-modal-url-input {
+  border: unset !important;
+}
+
+.rdw-image-modal-size {
+  display: none !important;
+}
+
+.rdw-image-modal-upload-option {
+  background-color: #404146 !important;
+  border-radius: 1rem !important;
+  outline: unset !important;
+}
+
+.rdw-image-modal-upload-option-label {
+  font-size: 1.3rem !important;
+  text-align: center !important;
+}
+
+.rdw-image-modal-btn {
+  border: unset !important;
+  border-radius: 0.5rem !important;
+  background: #0a66b7 !important;
+}
+
+.rdw-image-modal-btn:disabled {
+  background: #404146 !important;
+}
+
+.rdw-image-imagewrapper img {
+  border-radius: 1rem !important;
+  height: 14rem !important;
+}
+
+.entity-image {
+  margin-block: 2rem !important;
+  height: 35rem !important;
+}
+
+.rdw-image-alignment-options-popup {
+  background-color: #404146 !important;
+  border: unset !important;
+  width: unset !important;
+  display: none !important;
+}
+
+.rdw-image-alignment {
+  display: flex !important;
+  justify-content: flex-start !important;
 }

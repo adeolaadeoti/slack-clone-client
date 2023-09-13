@@ -21,6 +21,7 @@ import { useRouter } from 'next/router'
 import axios from '../services/axios'
 import { notifications } from '@mantine/notifications'
 import { NextPage } from 'next'
+import { GoogleLogin } from 'react-google-login'
 
 const Register: NextPage = () => {
   const router = useRouter()
@@ -50,6 +51,11 @@ const Register: NextPage = () => {
     },
   })
 
+  const responseGoogle = () => {
+    // Redirect to Google OAuth for authentication
+    window.location.href = '/auth/google'
+  }
+
   return (
     <Center p="xl" h="100vh" w="100vw" bg="#111317">
       <Stack justify="between">
@@ -64,6 +70,14 @@ const Register: NextPage = () => {
               email address you use at work.
             </Text>
           </Text>
+
+          {/* <GoogleLogin
+            clientId="943288209734-n5p29rpfrr7tot29st0apmao3tesci1u.apps.googleusercontent.com"
+            buttonText="Login with Google"
+            onSuccess={responseGoogle}
+            onFailure={responseGoogle}
+            cookiePolicy={'single_host_origin'}
+          /> */}
 
           <Paper radius="md" p="xl" withBorder w={'40rem'} mt="xl">
             <form
@@ -90,6 +104,12 @@ const Register: NextPage = () => {
                   leftIcon={<BiLogoGoogle size="1.8rem" />}
                   radius="md"
                   size="sm"
+                  onClick={() => {
+                    window.open(
+                      `http://localhost:3000/api/v1/auth/google/callback`,
+                      '_self'
+                    )
+                  }}
                   styles={(theme) => ({
                     root: {
                       backgroundColor: 'transparent',
@@ -108,29 +128,6 @@ const Register: NextPage = () => {
                   })}
                 >
                   Continue with Google
-                </MantineButton>
-                <MantineButton
-                  leftIcon={<FaApple size="1.8rem" />}
-                  radius="md"
-                  size="sm"
-                  styles={(theme) => ({
-                    root: {
-                      backgroundColor: 'transparent',
-                      border: '1px solid #373A40',
-                      height: '4.5rem',
-                      fontSize: '1.2rem',
-                      '&:not([data-disabled])': theme.fn.hover({
-                        backgroundColor: theme.fn.darken('#373A40', 0.05),
-                        transition: 'background-color .3s ease',
-                      }),
-                    },
-
-                    leftIcon: {
-                      marginRight: theme.spacing.md,
-                    },
-                  })}
-                >
-                  Continue with Apple
                 </MantineButton>
                 <Stack spacing="xs" mt="lg">
                   <Text size="xs" align="center">

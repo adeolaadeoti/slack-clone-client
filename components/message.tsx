@@ -11,7 +11,7 @@ import {
   ThemeIcon,
   UnstyledButton,
 } from '@mantine/core'
-import { EditorState } from 'draft-js'
+import { AtomicBlockUtils, EditorState } from 'draft-js'
 import { Editor } from 'react-draft-wysiwyg'
 import { convertToHTML } from 'draft-convert'
 import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css'
@@ -84,6 +84,9 @@ const Message = ({
               )
             } else if (entity.type === 'MENTION' || entity.type === 'HASHTAG') {
               return <span className="entity-mention">{originalText}</span>
+            } else if (entity.type === 'IMAGE') {
+              const { src } = entity.data
+              return <img src={src} className="entity-image" />
             }
 
             return originalText
@@ -228,7 +231,7 @@ const Message = ({
     }
   })
 
-  suggestions = [
+  suggestions = suggestions && [
     ...suggestions,
     {
       text: (
@@ -414,7 +417,25 @@ const Message = ({
             onEditorStateChange={handleChange}
             handleReturn={handleReturn}
             toolbar={{
-              options: ['inline', 'link', 'list', 'emoji'],
+              options: ['inline', 'link', 'list', 'emoji', 'image'],
+              image: {
+                previewImage: true,
+                uploadCallback: (file: any) => {
+                  return new Promise((resolve, reject) => {
+                    const reader = new FileReader()
+                    reader.onloadend = () => {
+                      resolve({
+                        data: {
+                          url: reader.result,
+                        },
+                      })
+                    }
+
+                    reader.onerror = (reason) => reject(reason)
+                    reader.readAsDataURL(file)
+                  })
+                },
+              },
               inline: {
                 options: ['bold', 'italic'],
                 className: 'inline-style',

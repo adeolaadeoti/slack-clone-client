@@ -37,25 +37,27 @@ export default function Conversation({ children }: any) {
       thread={children}
     >
       <BackgroundImage h="100vh" src="/bg-chat.png">
-        <MessageLayout
-          organisationData={organisationData}
-          organisationId={organisationId}
-          refreshApp={refreshApp}
-          messagesLoading={
-            channel
-              ? channelMessagesQuery.isLoading
-              : conversationMessagesQuery.isLoading
-          }
-          messages={messages}
-          setMessages={setMessages}
-          theme={theme}
-          type={channel ? 'channel' : 'conversation'}
-          data={
-            channel
-              ? channelQuery?.data?.data?.data
-              : conversationQuery?.data?.data?.data
-          }
-        />
+        {organisationData && (
+          <MessageLayout
+            organisationData={organisationData}
+            organisationId={organisationId}
+            refreshApp={refreshApp}
+            messagesLoading={
+              channel
+                ? channelMessagesQuery.isLoading
+                : conversationMessagesQuery.isLoading
+            }
+            messages={messages}
+            setMessages={setMessages}
+            theme={theme}
+            type={channel ? 'channel' : 'conversation'}
+            data={
+              channel
+                ? channelQuery?.data?.data?.data
+                : conversationQuery?.data?.data?.data
+            }
+          />
+        )}
       </BackgroundImage>
     </DefaultLayout>
   )

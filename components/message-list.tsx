@@ -144,7 +144,7 @@ export default function MessageList({ userId, messages, isThread }: any) {
               }}
               style={{
                 position: 'sticky',
-                top: 10,
+                top: -20,
               }}
               label={
                 <Text size="xs" px="md" color="white" className={classes.date}>

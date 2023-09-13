@@ -24,6 +24,7 @@ const Workspaces: NextPage = () => {
   const router = useRouter()
   const [email, setEmail] = React.useState('')
   const { refreshApp, setData } = useAppContext()
+
   const mutation = useMutation({
     mutationFn: () => {
       return axios.post('/organisation')
@@ -54,18 +55,24 @@ const Workspaces: NextPage = () => {
   function handleOpenWorkspace(organisation: any) {
     setData(null)
     localStorage.setItem('organisationId', organisation?._id)
-    refreshApp()
     router.push(`/c/${organisation?.channels?.[0]?._id}`)
     localStorage.setItem('channel', 'true')
   }
 
+  React.useEffect(() => {
+    if (router.query.token) {
+      setEmail(router.query.email as string)
+      localStorage.setItem('signUpEmail', router.query?.email as string)
+      localStorage.setItem('access-token', router?.query?.token as string)
+    }
+  }, [router.query.token])
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
       setEmail(localStorage.getItem('signUpEmail') as string)
 
       const signUpEmail = localStorage.getItem('signUpEmail')
       if (!signUpEmail) {
-        router.push('/signin')
+        // router.push('/signin')
       }
     }
   }, [])

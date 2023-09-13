@@ -90,6 +90,12 @@ const Signin: NextPage = () => {
                   leftIcon={<BiLogoGoogle size="1.8rem" />}
                   radius="md"
                   size="sm"
+                  onClick={() => {
+                    window.open(
+                      `http://localhost:3000/api/v1/auth/google/callback`,
+                      '_self'
+                    )
+                  }}
                   styles={(theme) => ({
                     root: {
                       backgroundColor: 'transparent',
@@ -108,29 +114,6 @@ const Signin: NextPage = () => {
                   })}
                 >
                   Sign in with Google
-                </MantineButton>
-                <MantineButton
-                  leftIcon={<FaApple size="1.8rem" />}
-                  radius="md"
-                  size="sm"
-                  styles={(theme) => ({
-                    root: {
-                      backgroundColor: 'transparent',
-                      border: '1px solid #373A40',
-                      height: '4.5rem',
-                      fontSize: '1.2rem',
-                      '&:not([data-disabled])': theme.fn.hover({
-                        backgroundColor: theme.fn.darken('#373A40', 0.05),
-                        transition: 'background-color .3s ease',
-                      }),
-                    },
-
-                    leftIcon: {
-                      marginRight: theme.spacing.md,
-                    },
-                  })}
-                >
-                  Sign in with Apple
                 </MantineButton>
                 <Stack spacing="xs" mt="lg">
                   <Text size="xs" align="center">

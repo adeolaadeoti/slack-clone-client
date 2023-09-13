@@ -4,6 +4,7 @@ const apiBase = 'http://localhost:3000/api/v1'
 
 const axiosInterceptorInstance = axios.create({
   baseURL: apiBase,
+  // baseURL: process.env.NEXT_PUBLIC_API,
 })
 
 // Request interceptor

@@ -92,7 +92,8 @@ const Signin: NextPage = () => {
                   size="sm"
                   onClick={() => {
                     window.open(
-                      `http://localhost:3000/api/v1/auth/google/callback`,
+                      `${process.env.NEXT_PUBLIC_API}/auth/google/callback`,
+                      // `http://localhost:3000/api/v1/auth/google/callback`,
                       '_self'
                     )
                   }}

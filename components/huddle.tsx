@@ -103,7 +103,6 @@ export default function Huddle({
   const [checked, setChecked] = React.useState(false)
   const { classes } = useStyles({ popupWindow, checked })
 
-  const quickFindRef = React.useRef<HTMLDivElement>(null)
   const [connectedUsers, setConnectedUsers] = React.useState<ConnectedUsers>({})
   const localVideoRef = React.useRef<any>()
   const localStream = React.useRef<any>()
@@ -116,7 +115,6 @@ export default function Huddle({
 
   const startScreenSharing = async () => {
     try {
-      // await setupWebRTC(true)
       setScreenSharing(true)
     } catch (error) {
       console.log('Error starting screen sharing:', error)
@@ -125,7 +123,6 @@ export default function Huddle({
 
   const stopScreenSharing = async () => {
     try {
-      // await setupWebRTC(false)
       setScreenSharing(false)
     } catch (error) {
       console.log('Error starting screen sharing:', error)
@@ -295,16 +292,12 @@ export default function Huddle({
       socket.emit('room-leave', { roomId: selected?._id, userId })
       setPopupWindow(false)
 
-      // if (screenSharing) {
-      //   stopScreenSharing() // Stop screen sharing when leaving the room
-      // } else {
       let streams = await localVideoRef.current.srcObject.getTracks()
       await streams.forEach((track: any) => track.stop())
 
       if (pcRefs.current[userId]) {
         pcRefs.current[userId].close()
       }
-      // }
     }
   }
 
@@ -366,43 +359,8 @@ export default function Huddle({
     console.log('Received ICE candidate:', candidate, senderUserId)
   }
 
-  React.useEffect(() => {
-    function handleDragOver(e: WindowEventMap['dragover']) {
-      e.preventDefault()
-      return false
-    }
-    function handleDrop(e: WindowEventMap['drop']) {
-      const offset = e?.dataTransfer!.getData('text/plain').split(',')
-      quickFindRef.current!.style.left =
-        e.clientX + parseInt(offset[0], 10) + 'px'
-      quickFindRef.current!.style.top =
-        e.clientY + parseInt(offset[1], 10) + 'px'
-      e.preventDefault()
-      return false
-    }
-    document.body.addEventListener('dragover', handleDragOver, false)
-    document.body.addEventListener('drop', handleDrop, false)
-  }, [])
-
-  function handleDragStart(e: React.DragEvent<HTMLDivElement>) {
-    const style = window.getComputedStyle(e.target as Element, null)
-    e.dataTransfer.setData(
-      'text/plain',
-      parseInt(style.getPropertyValue('left'), 10) -
-        e.clientX +
-        ',' +
-        (parseInt(style.getPropertyValue('top'), 10) - e.clientY)
-    )
-  }
-
   return (
-    <Stack
-      w="100%"
-      className={classes.huddle}
-      ref={quickFindRef}
-      draggable
-      onDragStart={handleDragStart}
-    >
+    <Stack w="100%" className={classes.huddle}>
       {checked && (
         <Stack w="100%">
           <Flex align="center" justify="space-between">

@@ -1,10 +1,10 @@
 import axios from 'axios'
 
-const apiBase = 'http://localhost:3000/api/v1'
+// const apiBase = 'http://localhost:3000/api/v1'
 
 const axiosInterceptorInstance = axios.create({
-  baseURL: apiBase,
-  // baseURL: process.env.NEXT_PUBLIC_API,
+  // baseURL: apiBase,
+  baseURL: process.env.NEXT_PUBLIC_API,
 })
 
 // Request interceptor

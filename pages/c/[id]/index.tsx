@@ -3,8 +3,10 @@ import DefaultLayout from '../../../components/pages/default-layout'
 import MessageLayout from '../../../components/pages/message-layout'
 import { useAppContext } from '../../../providers/app-provider'
 import { BackgroundImage } from '@mantine/core'
+import { useRouter } from 'next/router'
 
 export default function Conversation({ children }: any) {
+  const router = useRouter()
   const {
     data: organisationData,
     conversations,
@@ -23,6 +25,14 @@ export default function Conversation({ children }: any) {
     conversationQuery,
     refreshApp,
   } = useAppContext()
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if (!localStorage.getItem('access-token')) {
+        router.push('/signin')
+      }
+    }
+  }, [])
 
   return (
     <DefaultLayout

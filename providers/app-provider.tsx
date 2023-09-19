@@ -13,8 +13,9 @@ import {
 } from '@mantine/core'
 import io, { Socket } from 'socket.io-client'
 import { useRouter } from 'next/router'
-import { threadId } from 'worker_threads'
-const socket = io('http://localhost:3000')
+// import { threadId } from 'worker_threads'
+const socket = io(process.env.NEXT_PUBLIC_SOCKET as string)
+// const socket = io('http://localhost:3000')
 
 interface ContextProps {
   theme: MantineTheme

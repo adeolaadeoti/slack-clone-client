@@ -1,33 +1,137 @@
-# Example app with mantine
+# Slack Clone Client Repository
 
-This example features how you use [mantine](https://github.com/mantine/mantine), a React component library.
+- Api repository https://github.com/adeolaadeoti/slack-clone-api
 
-## Preview
+## Table of Contents
 
-Preview the example live on [StackBlitz](http://stackblitz.com/):
+- [Introduction](#introduction)
+- [Features](#features)
+- [Getting Started](#getting-started)
+  - [Installation](#installation)
+- [Usage](#usage)
+  - [User Registration](#user-registration)
+  - [Creating Channels](#creating-channels)
+  - [Sending Messages](#sending-messages)
+  - [Message Replies (Threads)](#message-replies-threads)
+  - [Huddle with Other Users](#huddle-with-other-users)
+- [Contributing](#contributing)
+- [License](#license)
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/vercel/next.js/tree/canary/examples/with-mantine)
+## Introduction
 
-## Deploy your own
+Slack clone is a powerful team collaboration platform that allows you to communicate and collaborate with your team members in real-time. Whether you're working remotely or in the same office, our application provides a seamless and efficient way to stay connected.
 
-Deploy the example using [Vercel](https://vercel.com?utm_source=github&utm_medium=readme&utm_campaign=next-example) or preview live with [StackBlitz](https://stackblitz.com/github/vercel/next.js/tree/canary/examples/with-mantine)
+![Screenshot](https://res.cloudinary.com/adeolaadeoti/image/upload/v1695161023/screenshot_jsd2mf.png)
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/vercel/next.js/tree/canary/examples/with-mantine&project-name=with-mantine&repository-name=with-mantine)
+## Features
 
-## How to use
+- Real-time chat and messaging
+- Channel-based communication
+- Direct messaging between users
+- File and media sharing
+- Customizable notifications
+- **Message Replies (Threads)**
+  - Start threads to reply to specific messages in a conversation.
+  - Keep discussions organized and focused.
+- **Huddle with Other Users**
+  - Create private huddles for group discussions.
+  - Collaborate with select team members in a secure environment.
 
-Execute [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app) with [npm](https://docs.npmjs.com/cli/init), [Yarn](https://yarnpkg.com/lang/en/docs/cli/create/), or [pnpm](https://pnpm.io) to bootstrap the example:
+## Getting Started
 
-```bash
-npx create-next-app --example with-mantine with-mantine-app
-```
+### Installation
 
-```bash
-yarn create next-app --example with-mantine with-mantine-app
-```
+1. Clone the repository:
 
-```bash
-pnpm create next-app --example with-mantine with-mantine-app
-```
+   ```bash
+   git clone https://github.com/adeolaadeoti/slack-clone-client.git
+   ```
 
-Deploy it to the cloud with [Vercel](https://vercel.com/new?utm_source=github&utm_medium=readme&utm_campaign=next-example) ([Documentation](https://nextjs.org/docs/deployment)).
+2. Change to the project directory:
+
+   ```bash
+   cd slack-clone-client
+   ```
+
+3. Install dependencies:
+
+   ```bash
+   yarn
+   ```
+
+4. Set up environment variables:
+
+   Create a `.env.local` file in the root directory of the project and add the necessary environment variables, including your database connection details and any API keys.
+
+   ```plaintext
+   NEXT_PUBLIC_API=http://localhost:8080/api/v1
+   NEXT_PUBLIC_SOCKET=http://localhost:8080
+   ```
+
+5. Start the application:
+
+   ```bash
+   yarn start
+   ```
+
+6. Access the application at `http://localhost:3000`.
+
+## Usage
+
+### User Registration
+
+1. Visit the application's URL.
+
+2. Click on the "Sign Up" or "Register" button to create a new user account.
+
+3. Fill out the registration form with your details.
+
+4. Once registered, you can log in with your credentials.
+
+### Creating Channels
+
+1. After logging in, you can create a new channel by clicking on the "Create Channel" button.
+
+2. Choose a name and description for your channel.
+
+3. Invite team members to join the channel.
+
+### Sending Messages
+
+1. To send a message in a channel, click on the channel's name in the left sidebar.
+
+2. Type your message in the input field at the bottom of the chat window and press Enter to send.
+
+3. You can also send direct messages to other users by clicking on their name in the user list.
+
+### Message Replies (Threads)
+
+1. To start a thread in response to a specific message:
+
+   - Hover over the message you want to reply to.
+
+   - Click on the "Reply" or "Start Thread" button.
+
+   - Type your reply in the thread and send it.
+
+2. Keep discussions organized by using threads to respond to messages.
+
+### Huddle with Other Users
+
+1. To create a private huddle:
+
+   - Click on the "Huddle" button in the sidebar.
+
+   - Select the users you want to include in the huddle.
+
+   - Start your private conversation.
+
+2. Huddles provide a secure environment for group discussions with select team members.
+
+## Contributing
+
+We welcome contributions from the community.
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).

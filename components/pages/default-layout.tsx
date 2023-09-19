@@ -106,7 +106,7 @@ export default function DefaultLayout({
         p: 'md',
       })
     },
-    onSuccess(data) {
+    onSuccess(data: any) {
       setChannels((channels: any) => [...channels, data?.data?.data])
       refreshApp()
       close()

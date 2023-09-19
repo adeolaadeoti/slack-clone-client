@@ -40,7 +40,7 @@ const Verify: NextPage = () => {
         p: 'md',
       })
     },
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       notifications.show({
         message: `Confirmed as ${data?.data?.data?.email}`,
         color: 'green',

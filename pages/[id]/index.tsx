@@ -51,7 +51,7 @@ const Onboarding: NextPage = () => {
         p: 'md',
       })
     },
-    onSuccess(data) {
+    onSuccess(data: any) {
       router.push(`${data?.data?.data?._id}/coworkers`)
     },
   })

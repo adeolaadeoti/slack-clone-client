@@ -84,7 +84,24 @@ const useStyles = createStyles((theme, { popupWindow, checked }: any) => ({
 }))
 
 const config = {
-  iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
+  iceServers: [
+    { urls: 'stun:stun.l.google.com:19302' },
+    {
+      urls: 'turn:5.161.49.183:3478',
+      username: 'username',
+      credential: 'password',
+    },
+    {
+      urls: 'turn:135.181.147.65:3478',
+      username: 'username',
+      credential: 'password',
+    },
+    {
+      urls: 'turn:numb.viagenie.ca',
+      credential: 'watchparty',
+      username: 'howardzchung@gmail.com',
+    },
+  ],
 }
 
 // Define the ConnectedUsers interface

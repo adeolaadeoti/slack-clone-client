@@ -110,13 +110,13 @@ const Coworkers: NextPage = () => {
           >
             {mutation.isLoading ? '' : 'Next'}
           </Button>
-          <UnstyledButton
+          {/* <UnstyledButton
             fw="normal"
             fz="xs"
             onClick={() => router.push(`/${id}/channels`)}
           >
             Skip this step
-          </UnstyledButton>
+          </UnstyledButton> */}
         </Flex>
       </Grid.Col>
     </Grid>

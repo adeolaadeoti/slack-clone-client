@@ -125,7 +125,7 @@ const Workspaces: NextPage = () => {
               Open a workspace
             </Text>
           )}
-          {organisations?.length === 0 && (
+          {organisations?.length === 0 ? (
             <Center>
               <Flex direction="column" align="center" justify="center">
                 <Text fz="lg" fw={600} c="white">
@@ -145,9 +145,49 @@ const Workspaces: NextPage = () => {
                 </Button>
               </Flex>
             </Center>
+          ) : (
+            <Stack>
+              {organisations?.map((organisation: Data, index: number) => (
+                <Flex
+                  pb="md"
+                  align="center"
+                  key={organisation?._id}
+                  style={{
+                    borderBottom:
+                      organisations.length - 1 === index
+                        ? ''
+                        : '1px solid #373A40',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <Flex align="center" gap="sm">
+                    <Avatar
+                      size="lg"
+                      color={getColorByIndex(index)}
+                      radius="xl"
+                    >
+                      {organisation.name[0].toUpperCase()}
+                    </Avatar>
+                    <Flex direction="column">
+                      <Text c="white" transform="capitalize">
+                        {organisation.name}
+                      </Text>
+                      <Text size="xs" transform="capitalize">
+                        {organisation.coWorkers.length} members
+                      </Text>
+                    </Flex>
+                  </Flex>
+                  <Button
+                    onClick={() => handleOpenWorkspace(organisation)}
+                    rightIcon={<BsArrowRightShort />}
+                    appearance="outline"
+                  >
+                    Open
+                  </Button>
+                </Flex>
+              ))}
+            </Stack>
           )}
-
-          
         </Paper>
       </Stack>
     </Center>

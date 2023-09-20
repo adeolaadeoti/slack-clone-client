@@ -2,7 +2,6 @@ import React, { useState } from 'react'
 import {
   Avatar,
   Box,
-  Center,
   Flex,
   Loader,
   Paper,
@@ -11,7 +10,7 @@ import {
   ThemeIcon,
   UnstyledButton,
 } from '@mantine/core'
-import { AtomicBlockUtils, EditorState } from 'draft-js'
+import { EditorState } from 'draft-js'
 import { Editor } from 'react-draft-wysiwyg'
 import { convertToHTML } from 'draft-convert'
 import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css'
@@ -23,19 +22,16 @@ import { notifications } from '@mantine/notifications'
 import MessageList from './message-list'
 import { useRouter } from 'next/router'
 import { GoMegaphone } from 'react-icons/go'
+import { Message, MessageProps, User } from '../utils/interfaces'
 
 const Message = ({
-  data,
   messagesLoading,
-  messages,
-  setMessages,
   isLoading,
-  theme,
   type,
   isThread = false,
   open,
   channelCollaborators,
-}: any) => {
+}: MessageProps) => {
   const router = useRouter()
   const { threadId } = router.query
 
@@ -45,12 +41,13 @@ const Message = ({
     conversations,
     selected,
     threadMessages,
+    messages,
+    setMessages,
+    theme,
   } = useAppContext()
   const userId = organisationData?.profile?._id
-  const conversationCollaborators = conversations?.map((conversation: any) => {
-    return conversation.collaborators.map(
-      (collaborator: any) => collaborator._id
-    )
+  const conversationCollaborators = conversations?.map((conversation) => {
+    return conversation.collaborators.map((collaborator) => collaborator._id)
   })
 
   const [editorState, setEditorState] = useState(() =>
@@ -58,7 +55,7 @@ const Message = ({
   )
   const stackRef = React.useRef<HTMLDivElement | null>(null)
 
-  const handleChange = (newEditorState: EditorState | any) => {
+  const handleChange = (newEditorState: EditorState) => {
     setEditorState(newEditorState)
   }
 
@@ -111,25 +108,25 @@ const Message = ({
         } else {
           socket.emit('message', {
             message,
-            organisation: data?.organisation,
-            hasNotOpen: data?.collaborators?.filter(
-              (c: any) => c._id !== userId
+            organisation: selected?.organisation,
+            hasNotOpen: selected?.collaborators?.filter(
+              (c) => c._id !== userId
             ),
-            ...(data?.isChannel && {
-              channelId: data?._id,
-              channelName: data?.name,
-              collaborators: data?.collaborators,
+            ...(selected?.isChannel && {
+              channelId: selected?._id,
+              channelName: selected?.name,
+              collaborators: selected?.collaborators,
             }),
-            ...(data?.isConversation && {
-              conversationId: data?._id,
-              collaborators: data?.collaborators,
+            ...(selected?.isConversation && {
+              conversationId: selected?._id,
+              collaborators: selected?.collaborators,
               isSelf:
-                data?.collaborators[0]?._id === data?.collaborators[1]?._id,
+                selected?.collaborators[0]?._id ===
+                selected?.collaborators[1]?._id,
             }),
           })
         }
 
-        // draftJsField = EditorState.moveFocusToEnd(EditorState.push(editorState, ContentState.createFromText(''), 'remove-range'));
         const newState = EditorState.createEmpty()
         setEditorState(EditorState.moveFocusToEnd(newState))
         returnValue = true
@@ -142,24 +139,26 @@ const Message = ({
     socket.on('message', ({ collaborators, newMessage }) => {
       if (
         collaborators?.includes(userId) ||
-        channelCollaborators?.includes(userId)
+        channelCollaborators?.includes(userId ?? '')
       ) {
-        setMessages((prevMessages: any) => [...prevMessages, newMessage])
+        setMessages((prevMessages) => [
+          ...(prevMessages as Message[]),
+          newMessage,
+        ])
       }
     })
 
     socket.on(
       'notification',
       ({ newMessage, organisation, collaborators, channelName }) => {
-        const collaboratorsId = collaborators?.map((collab: any) => {
+        const collaboratorsId = collaborators?.map((collab: User) => {
           return collab._id
         })
 
-        const exists = conversationCollaborators?.some(
-          (collaboratorArray: any) =>
-            collaboratorArray.every((collaborator: any) =>
-              collaboratorsId.includes(collaborator)
-            )
+        const exists = conversationCollaborators?.some((collaboratorArray) =>
+          collaboratorArray.every((collaborator) =>
+            collaboratorsId.includes(collaborator)
+          )
         )
         if (organisationData?._id === organisation) {
           if (collaboratorsId?.includes(userId) && channelName) {
@@ -193,16 +192,16 @@ const Message = ({
   }, [])
 
   React.useEffect(() => {
-    if (messages?.length > 5) {
+    if (messages?.length && messages?.length > 5) {
       stackRef.current?.scrollTo(0, stackRef.current.scrollHeight)
     }
   }, [messages])
 
-  let suggestions = organisationData?.coWorkers?.map((user: any) => {
+  let suggestions = organisationData?.coWorkers?.map((user) => {
     return {
       text: (
         <Flex align="center" gap="sm">
-          <Avatar src={`/avatars/${user.username[0]}.png`} size="sm" />
+          <Avatar src={`/avatars/${user?.username?.[0]}.png`} size="sm" />
           <Text fz="sm">
             {user.username} {userId === user._id && '(you)'}
           </Text>
@@ -283,12 +282,12 @@ const Message = ({
                 variant="gradient"
                 gradient={{ from: '#202020', to: '#414141', deg: 35 }}
               >
-                {String(data?.name?.[0])?.toLowerCase()}
+                {String(selected?.name?.[0])?.toLowerCase()}
               </ThemeIcon>
             )}
             {type === 'conversation' && (
               <Avatar
-                src={`/avatars/${data?.name[0].toLowerCase()}.png`}
+                src={`/avatars/${selected?.name[0].toLowerCase()}.png`}
                 size="xl"
                 radius="xl"
               />
@@ -300,15 +299,15 @@ const Message = ({
                     This is the very first begining of the
                     <Text span c={theme.colors.blue[5]}>
                       {' '}
-                      #{String(data?.name)?.toLowerCase()}{' '}
+                      #{String(selected?.name)?.toLowerCase()}{' '}
                     </Text>{' '}
                     channel
                   </Text>
                   <Text fz="sm" c={theme.colors.dark[2]}>
                     This channel is for everything{' '}
-                    <Text span> #{String(data?.name)?.toLowerCase()} </Text> .
-                    Hold meetings, share docs, and make decisions together with
-                    your team. &nbsp;
+                    <Text span> #{String(selected?.name)?.toLowerCase()} </Text>{' '}
+                    . Hold meetings, share docs, and make decisions together
+                    with your team. &nbsp;
                     <UnstyledButton fz="sm" c={theme.colors.blue[5]}>
                       Edit description
                     </UnstyledButton>
@@ -328,7 +327,7 @@ const Message = ({
               )}
               {type === 'conversation' && (
                 <>
-                  {data?.isSelf ? (
+                  {selected?.isSelf ? (
                     <>
                       <Text weight="bold" c="white">
                         This space is just for you.
@@ -352,7 +351,7 @@ const Message = ({
                         This conversation is just between
                         <Text span c={theme.colors.blue[5]}>
                           {' '}
-                          @{String(data?.name)?.toLowerCase()}{' '}
+                          @{String(selected?.name)?.toLowerCase()}{' '}
                         </Text>{' '}
                         and you.
                       </Text>
@@ -375,16 +374,21 @@ const Message = ({
             {messagesLoading ? (
               <Loader color={theme.colors.dark[1]} mt="md" />
             ) : (
-              <MessageList userId={userId} messages={messages} />
+              <MessageList userId={userId as string} messages={messages} />
             )}
           </>
         )}
         {isThread && (
-          <MessageList isThread userId={userId} messages={threadMessages} />
+          <MessageList
+            isThread
+            userId={userId as string}
+            messages={threadMessages}
+          />
         )}
       </Stack>
 
-      {(channelCollaborators?.includes(userId) || !data?.isChannel) && (
+      {(channelCollaborators?.includes(userId ?? '') ||
+        !selected?.isChannel) && (
         <Paper
           radius="md"
           mt="xs"
@@ -399,7 +403,7 @@ const Message = ({
         >
           <Editor
             placeholder={`Message ${
-              data?.isChannel ? '#' : ''
+              selected?.isChannel ? '#' : ''
             }${selected?.name?.toLowerCase()}`}
             editorState={editorState}
             hashtag={{
@@ -420,7 +424,7 @@ const Message = ({
               options: ['inline', 'link', 'list', 'emoji', 'image'],
               image: {
                 previewImage: true,
-                uploadCallback: (file: any) => {
+                uploadCallback: (file: File) => {
                   return new Promise((resolve, reject) => {
                     const reader = new FileReader()
                     reader.onloadend = () => {

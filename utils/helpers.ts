@@ -28,7 +28,7 @@ interface FormattedDate {
   timeRender: string
 }
 
-export function formatDate(dateString: string): FormattedDate | any {
+export function formatDate(dateString: string): FormattedDate | undefined {
   if (dateString) {
     const options: Intl.DateTimeFormatOptions = {
       month: 'short',

@@ -14,13 +14,13 @@ import SlackLogo from '../components/slack-logo'
 import Input from '../components/input'
 import Button from '../components/button'
 import { BiLogoGoogle } from 'react-icons/bi'
-import { FaApple } from 'react-icons/fa'
 import { IoLogoGithub } from 'react-icons/io'
 import { useMutation } from '@tanstack/react-query'
 import { useRouter } from 'next/router'
 import axios from '../services/axios'
 import { notifications } from '@mantine/notifications'
 import { NextPage } from 'next'
+import { ApiError } from '../utils/interfaces'
 
 const Signin: NextPage = () => {
   const router = useRouter()
@@ -37,7 +37,7 @@ const Signin: NextPage = () => {
     mutationFn: (body) => {
       return axios.post('/auth/signin', body)
     },
-    onError(error: any) {
+    onError(error: ApiError) {
       notifications.show({
         message: error?.response?.data?.data?.name,
         color: 'red',
@@ -93,7 +93,6 @@ const Signin: NextPage = () => {
                   onClick={() => {
                     window.open(
                       `${process.env.NEXT_PUBLIC_API}/auth/google/callback`,
-                      // `http://localhost:3000/api/v1/auth/google/callback`,
                       '_self'
                     )
                   }}

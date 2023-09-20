@@ -16,6 +16,7 @@ import axios from '../services/axios'
 import { notifications } from '@mantine/notifications'
 import { Loader } from '@mantine/core'
 import { NextPage } from 'next'
+import { ApiError, ApiSuccess } from '../utils/interfaces'
 
 const Verify: NextPage = () => {
   const [email, setEmail] = React.useState('')
@@ -33,14 +34,14 @@ const Verify: NextPage = () => {
     mutationFn: (body) => {
       return axios.post('/auth/verify', body)
     },
-    onError(error: any) {
+    onError(error: ApiError) {
       notifications.show({
         message: error?.response?.data?.data?.name,
         color: 'red',
         p: 'md',
       })
     },
-    onSuccess: (data: any) => {
+    onSuccess: (data: ApiSuccess['data']) => {
       notifications.show({
         message: `Confirmed as ${data?.data?.data?.email}`,
         color: 'green',

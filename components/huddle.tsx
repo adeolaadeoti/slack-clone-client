@@ -19,8 +19,14 @@ import {
 import { FaRegWindowMaximize, FaRegWindowMinimize } from 'react-icons/fa'
 import { LuScreenShare, LuScreenShareOff } from 'react-icons/lu'
 import { TbHeadphones, TbHeadphonesOff } from 'react-icons/tb'
+import { HuddleProps } from '../utils/interfaces'
+import { useAppContext } from '../providers/app-provider'
 
-const useStyles = createStyles((theme, { popupWindow, checked }: any) => ({
+type Style = {
+  popupWindow: boolean
+  checked: boolean
+}
+const useStyles = createStyles((theme, { popupWindow, checked }: Style) => ({
   huddle: {
     position: 'absolute',
     bottom: '0',
@@ -87,25 +93,22 @@ const config = {
   iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
 }
 
-// Define the ConnectedUsers interface
 interface ConnectedUsers {
   [userId: string]: boolean
 }
 
 export default function Huddle({
-  selected,
-  theme,
-  socket,
   userId,
   popupWindow,
   setPopupWindow,
-}: any) {
+}: HuddleProps) {
+  const { selected, theme, socket } = useAppContext()
   const [checked, setChecked] = React.useState(false)
   const { classes } = useStyles({ popupWindow, checked })
 
   const [connectedUsers, setConnectedUsers] = React.useState<ConnectedUsers>({})
-  const localVideoRef = React.useRef<any>()
-  const localStream = React.useRef<any>()
+  const localVideoRef = React.useRef<HTMLVideoElement>(null)
+  const localStream = React.useRef<MediaStream | null>(null)
   const pcRefs = React.useRef<Record<string, RTCPeerConnection>>({})
 
   const [videoEnabled, setVideoEnabled] = React.useState(true)
@@ -131,7 +134,7 @@ export default function Huddle({
 
   // Function to toggle user media video
   async function toggleVideo() {
-    const tracks = localStream.current.getVideoTracks()
+    const tracks = localStream.current!.getVideoTracks()
     if (tracks.length > 0) {
       tracks[0].enabled = !videoEnabled
       setVideoEnabled(!videoEnabled)
@@ -192,8 +195,8 @@ export default function Huddle({
         }
       }
 
-      localStream.current.getTracks().forEach((track: any) => {
-        pc.addTrack(track, localStream.current)
+      localStream.current.getTracks().forEach((track) => {
+        pc.addTrack(track, localStream.current as MediaStream)
       })
 
       pcRefs.current[user] = pc
@@ -206,23 +209,23 @@ export default function Huddle({
       // Emit the "join-room" event when the user starts the call
       socket.emit('join-room', { roomId: selected?._id, userId })
       // Listen for the "join-room" event to trigger a call when another user joins
-      socket.on('join-room', ({ roomId, otherUserId }: any) => {
+      socket.on('join-room', ({ roomId, otherUserId }) => {
         console.log(`User ${otherUserId} joined room ${roomId}`)
         setConnectedUsers({ [otherUserId]: true })
       })
 
       // Event listener for receiving SDP offers from other users
-      socket.on('offer', ({ offer, senderUserId }: any) => {
+      socket.on('offer', ({ offer, senderUserId }) => {
         handleOffer(offer, senderUserId)
       })
 
       // Event listener for receiving SDP answers from other users
-      socket.on('answer', ({ answer, senderUserId }: any) => {
+      socket.on('answer', ({ answer, senderUserId }) => {
         handleAnswer(answer, senderUserId)
       })
 
       // Event listener for receiving ICE candidates from other users
-      socket.on('ice-candidate', (candidate: any, senderUserId: string) => {
+      socket.on('ice-candidate', (candidate, senderUserId) => {
         handleIceCandidate(candidate, senderUserId)
       })
 
@@ -286,14 +289,16 @@ export default function Huddle({
     }
   }
 
-  async function handleHuddleRequest(e: any) {
+  async function handleHuddleRequest(e: React.ChangeEvent<HTMLInputElement>) {
     setChecked(e.currentTarget.checked)
     if (e.currentTarget.checked === false) {
       socket.emit('room-leave', { roomId: selected?._id, userId })
       setPopupWindow(false)
 
-      let streams = await localVideoRef.current.srcObject.getTracks()
-      await streams.forEach((track: any) => track.stop())
+      let streams = await (
+        localVideoRef?.current?.srcObject as MediaStream
+      )?.getTracks()
+      await streams.forEach((track) => track.stop())
 
       if (pcRefs.current[userId]) {
         pcRefs.current[userId].close()
@@ -302,13 +307,13 @@ export default function Huddle({
   }
 
   // Function to send an SDP offer to another user
-  function sendOffer(offer: any, targetUserId: string) {
+  function sendOffer(offer: RTCSessionDescriptionInit, targetUserId: string) {
     console.log('offer was sent', offer, targetUserId)
     socket.emit('offer', { offer, targetUserId })
   }
 
   // Function to send an SDP answer to another user
-  function sendAnswer(answer: any, senderUserId: string) {
+  function sendAnswer(answer: RTCSessionDescriptionInit, senderUserId: string) {
     console.log('answer was sent', answer, senderUserId)
     socket.emit('answer', { answer, senderUserId })
   }
@@ -321,25 +326,35 @@ export default function Huddle({
       })
       await pcRefs.current[user]?.setLocalDescription(offer)
       const localDescription = pcRefs.current[user]?.localDescription
-      sendOffer(localDescription, user)
+      sendOffer(localDescription as RTCSessionDescriptionInit, user)
     } catch (error) {
       console.log('Error creating and sending offer:', error)
     }
   }
 
   // Function to handle an incoming SDP offer
-  async function handleOffer(offer: any, senderUserId: string) {
+  async function handleOffer(
+    offer: RTCSessionDescriptionInit,
+    senderUserId: string
+  ) {
     try {
       await pcRefs.current[senderUserId].setRemoteDescription(offer)
       const answer = await pcRefs.current[senderUserId].createAnswer()
       await pcRefs.current[senderUserId].setLocalDescription(answer)
-      sendAnswer(pcRefs.current[senderUserId].localDescription, senderUserId)
+      sendAnswer(
+        pcRefs.current[senderUserId]
+          .localDescription as RTCSessionDescriptionInit,
+        senderUserId
+      )
     } catch (error) {
       console.log('Error handling offer:')
     }
   }
 
-  async function handleAnswer(answer: any, senderUserId: string) {
+  async function handleAnswer(
+    answer: RTCSessionDescriptionInit,
+    senderUserId: string
+  ) {
     try {
       const pc = pcRefs.current[senderUserId]
       await pc.setRemoteDescription(answer)
@@ -349,13 +364,14 @@ export default function Huddle({
   }
 
   // Function to handle an incoming ICE candidate
-  async function handleIceCandidate(candidate: any, senderUserId: string) {
+  async function handleIceCandidate(
+    candidate: RTCIceCandidateInit,
+    senderUserId: string
+  ) {
     candidate = new RTCIceCandidate(candidate)
-    pcRefs.current[senderUserId]
-      ?.addIceCandidate(candidate)
-      .catch((error: any) => {
-        console.log('Error adding ICE candidate:', error)
-      })
+    pcRefs.current[senderUserId]?.addIceCandidate(candidate).catch((error) => {
+      console.log('Error adding ICE candidate:', error)
+    })
     console.log('Received ICE candidate:', candidate, senderUserId)
   }
 
@@ -433,9 +449,6 @@ export default function Huddle({
                 onClick={screenSharing ? stopScreenSharing : startScreenSharing}
                 variant="default"
                 size={40}
-                gradient={
-                  screenSharing ? theme.colors.red : theme.colors.dark[4]
-                }
               >
                 {screenSharing ? (
                   <LuScreenShareOff size="1.6rem" />

@@ -16,6 +16,7 @@ import axios from '../../services/axios'
 import { notifications } from '@mantine/notifications'
 import { useRouter } from 'next/router'
 import React from 'react'
+import { ApiError, ApiSuccess } from '../../utils/interfaces'
 
 const Onboarding: NextPage = () => {
   const router = useRouter()
@@ -44,23 +45,17 @@ const Onboarding: NextPage = () => {
     mutationFn: (body) => {
       return axios.post('/organisation', body)
     },
-    onError(error: any) {
+    onError(error: ApiError) {
       notifications.show({
         message: error?.response?.data?.data?.name,
         color: 'red',
         p: 'md',
       })
     },
-    onSuccess(data: any) {
+    onSuccess(data: ApiSuccess['data']) {
       router.push(`${data?.data?.data?._id}/coworkers`)
     },
   })
-
-  //   React.useEffect(() => {
-  //     if (query.isError) {
-  //       router.push('/workspaces') // to be replaced with the signin to workplace url
-  //     }
-  //   }, [query.isError])
 
   if (query.isLoading) {
     return <LoadingOverlay visible />
@@ -128,34 +123,3 @@ const Onboarding: NextPage = () => {
 }
 
 export default Onboarding
-
-// export async function getServerSideProps({ req, query }: any) {
-//   const authToken = req.headers.authorization // Get the authorization token from the request headers
-//   const apiUrl = `http://localhost:3000/api/v1/organisation/${query.id}` // Replace with your API URL
-
-//   try {
-//     // Fetch data from the API using the authorization token in the headers
-//     const response = await axios.get(apiUrl, {
-//       headers: {
-//         Authorization: authToken,
-//       },
-//     })
-
-//     const organizationData = response.data // Assuming the API returns the organization data in the response
-//     console.log(authToken)
-//     // Pass the organization data as a prop to the component
-//     return {
-//       props: {
-//         organizationData,
-//       },
-//     }
-//   } catch (error) {
-//     // Handle errors here if needed
-//     console.error('Error fetching organization data:', error)
-
-//     // Return an empty object or a redirect if the request fails
-//     return {
-//       props: {},
-//     }
-//   }
-// }

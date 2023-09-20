@@ -24,7 +24,6 @@
     "react": "18.0.0",
     "react-dom": "18.0.0",
     "react-draft-wysiwyg": "^1.15.0",
-    "react-google-login": "^5.2.2",
     "react-icons": "^4.10.1",
     "socket.io-client": "^4.7.2",
     "webrtc-adapter": "^8.2.3"

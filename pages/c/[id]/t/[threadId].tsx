@@ -1,44 +1,22 @@
-import React, { ReactNode } from 'react'
+import React from 'react'
 import Conversation from '..'
-import {
-  Box,
-  Divider,
-  Flex,
-  Paper,
-  Portal,
-  Space,
-  Text,
-  Tooltip,
-} from '@mantine/core'
+import { Divider, Flex, Text, Tooltip } from '@mantine/core'
 import { useAppContext } from '../../../../providers/app-provider'
 import { IoMdClose } from 'react-icons/io'
 import { useRouter } from 'next/router'
-
 import { Avatar } from '@mantine/core'
-import { EditorState } from 'draft-js'
-// import { Editor } from 'react-draft-wysiwyg'
-import { convertToHTML } from 'draft-convert'
 import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css'
-// import { useAppContext } from '../providers/app-provider'
-import { BiEditAlt, BiUserPlus } from 'react-icons/bi'
-// import { truncateDraftToHtml } from '../utils/helpers'
-import { notifications } from '@mantine/notifications'
-// import Message from '../../../../components/message'
 import { useQuery } from '@tanstack/react-query'
 import axios from '../../../../services/axios'
 import dynamic from 'next/dynamic'
-// import MessageList from './message-list'
 const Message = dynamic(() => import('../../../../components/message'), {
   ssr: false,
 })
-
-import { useEffect, useRef } from 'react'
-
 import { createStyles, getStylesRef } from '@mantine/core'
 import DOMPurify from 'dompurify'
 import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css'
-import { LuReplyAll } from 'react-icons/lu'
 import { formatDate } from '../../../../utils/helpers'
+import { Thread } from '../../../../utils/interfaces'
 
 const useStyles = createStyles((theme) => ({
   message: {
@@ -117,7 +95,10 @@ export default function Thread() {
 
   React.useEffect(() => {
     socket.on('thread-message', ({ newMessage }) => {
-      setThreadMessages((prevMessages: any) => [...prevMessages, newMessage])
+      setThreadMessages((prevMessages) => [
+        ...(prevMessages as Thread[]),
+        newMessage,
+      ])
     })
     return () => {
       socket.off('thread-message')
@@ -155,7 +136,9 @@ export default function Thread() {
                 label="Completed"
                 withArrow
                 position="top"
-                onClick={() => handleReaction('✅', selectedMessage._id)}
+                onClick={() =>
+                  handleReaction('✅', selectedMessage?._id as string)
+                }
               >
                 <Text fz="md" tt="lowercase" c={theme.colors.dark[3]} span>
                   ✅
@@ -165,7 +148,9 @@ export default function Thread() {
                 label="Taking a look"
                 withArrow
                 position="top"
-                onClick={() => handleReaction('👀', selectedMessage._id)}
+                onClick={() =>
+                  handleReaction('👀', selectedMessage?._id as string)
+                }
               >
                 <Text fz="md" tt="lowercase" c={theme.colors.dark[3]} span>
                   👀
@@ -175,7 +160,9 @@ export default function Thread() {
                 label="Nicely done"
                 withArrow
                 position="top"
-                onClick={() => handleReaction('👍', selectedMessage._id)}
+                onClick={() =>
+                  handleReaction('👍', selectedMessage?._id as string)
+                }
               >
                 <Text fz="md" tt="lowercase" c={theme.colors.dark[3]} span>
                   👍
@@ -190,31 +177,36 @@ export default function Thread() {
             <Flex direction="column">
               <Flex align="center" gap="md">
                 <Text fz="sm" fw="bold" c="white" span>
-                  {selectedMessage?.sender?.username ??
-                    selectedMessage?.username}
+                  {selectedMessage?.sender?.username}
                 </Text>
                 <Tooltip
-                  label={formatDate(selectedMessage?.createdAt)?.time}
+                  label={formatDate(selectedMessage?.createdAt as string)?.time}
                   withArrow
                   position="right"
                 >
                   <Text fz="xs" tt="lowercase" c={theme.colors.dark[3]} span>
-                    {formatDate(selectedMessage?.createdAt)?.timeRender}
+                    {
+                      formatDate(selectedMessage?.createdAt as string)
+                        ?.timeRender
+                    }
                   </Text>
                 </Tooltip>
               </Flex>
               <div
                 className="chat-wrapper"
                 dangerouslySetInnerHTML={{
-                  __html: DOMPurify.sanitize(selectedMessage?.content, {
-                    ADD_ATTR: ['target'],
-                  }),
+                  __html: DOMPurify.sanitize(
+                    selectedMessage?.content as string,
+                    {
+                      ADD_ATTR: ['target'],
+                    }
+                  ),
                 }}
               />
               <Flex align="center" gap="sm">
-                {selectedMessage?.reactions?.map((reaction: any) => {
+                {selectedMessage?.reactions?.map((reaction) => {
                   const reactionsFrom = reaction.reactedToBy.map(
-                    (user: any) => user.username
+                    (user) => user.username
                   )
 
                   return (
@@ -235,7 +227,7 @@ export default function Thread() {
                         }
                         style={{
                           backgroundColor: reaction?.reactedToBy?.some(
-                            (user: any) => user?._id === userId
+                            (user) => user?._id === userId
                           )
                             ? theme.colors.dark[5]
                             : 'transparent',
@@ -258,7 +250,7 @@ export default function Thread() {
           )}
         </Flex>
       )}
-      <Message isThread />
+      <Message isThread={true} />
     </Conversation>
   )
 }

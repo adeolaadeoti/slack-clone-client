@@ -5,7 +5,6 @@ import {
   Modal,
   MultiSelect,
   Paper,
-  Portal,
   Skeleton,
   Text,
   ThemeIcon,
@@ -16,12 +15,13 @@ import { getColorByIndex, getColorHexByIndex } from '../../utils/helpers'
 import { LuUserPlus } from 'react-icons/lu'
 import dynamic from 'next/dynamic'
 import { useDisclosure } from '@mantine/hooks'
-import TagInputs from '../tags-input'
 import { useForm } from '@mantine/form'
 import Button from '../button'
 import { useMutation } from '@tanstack/react-query'
 import axios from '../../services/axios'
 import { notifications } from '@mantine/notifications'
+import { useAppContext } from '../../providers/app-provider'
+import { ApiError, MessageLayoutProps, User } from '../../utils/interfaces'
 const Message = dynamic(() => import('../message'), {
   ssr: false,
 })
@@ -37,29 +37,28 @@ const useStyles = createStyles((theme) => ({
 }))
 
 export default function MessageLayout({
-  data,
   type,
   messagesLoading,
-  messages,
-  setMessages,
-  theme,
-  socket,
-  refreshApp,
-  organisationData,
-}: any) {
+}: MessageLayoutProps) {
+  const {
+    theme,
+    refreshApp,
+    selected,
+    data: organisationData,
+  } = useAppContext()
   const { classes } = useStyles()
   const [isDisabled, setIsDisabled] = React.useState(true)
   const [channelCollaborators, setChannelCollaborators] = React.useState(
-    data?.collaborators?.map((d: any) => d._id)
+    selected?.collaborators?.map((d: User) => d._id)
   )
 
-  const isLoading = !data?.name
+  const isLoading = !selected?.name
   const [opened, { open, close }] = useDisclosure(false)
 
   const form = useForm({
     initialValues: {
       userIds: [''],
-      channelId: data?._id,
+      channelId: selected?._id,
     },
     validate: {
       userIds: (val) =>
@@ -71,7 +70,7 @@ export default function MessageLayout({
     mutationFn: (body) => {
       return axios.post('/teammates', body)
     },
-    onError(error: any) {
+    onError(error: ApiError) {
       notifications.show({
         message: error?.response?.data?.data?.name,
         color: 'red',
@@ -90,15 +89,15 @@ export default function MessageLayout({
     },
   })
 
-  const collaboratorsToRemove = data?.collaborators?.map((c: any) => c._id)
+  const collaboratorsToRemove = selected?.collaborators?.map((c: User) => c._id)
 
   const removeCollaboratorsFromCoworkers = organisationData?.coWorkers?.filter(
-    (c: any) => {
+    (c: User) => {
       return !collaboratorsToRemove?.includes?.(c._id)
     }
   )
 
-  const coWorkersSelect = removeCollaboratorsFromCoworkers?.map((c: any) => {
+  const coWorkersSelect = removeCollaboratorsFromCoworkers?.map((c: User) => {
     return {
       value: c._id,
       label: c.email,
@@ -107,11 +106,11 @@ export default function MessageLayout({
 
   const joinMutation = useMutation({
     mutationFn: () => {
-      return axios.post(`/channel/${data?._id}`, {
+      return axios.post(`/channel/${selected?._id}`, {
         userId: organisationData?.profile?._id,
       })
     },
-    onError(error: any) {
+    onError(error: ApiError) {
       notifications.show({
         message: error?.response?.data?.data?.name,
         color: 'red',
@@ -120,12 +119,12 @@ export default function MessageLayout({
     },
     onSuccess() {
       refreshApp()
-      setChannelCollaborators((collaborators: string[]) => [
-        ...collaborators,
-        organisationData?.profile?._id,
+      setChannelCollaborators((collaborators) => [
+        ...(collaborators as string[]),
+        organisationData?.profile?._id as string,
       ])
       notifications.show({
-        message: `You've joined the ${data?.name} successfully`,
+        message: `You've joined the ${selected?.name} successfully`,
         color: 'green',
         p: 'md',
       })
@@ -137,13 +136,13 @@ export default function MessageLayout({
       <Modal
         opened={opened}
         onClose={close}
-        title={`Add people to #${data?.name}`}
+        title={`Add people to #${selected?.name}`}
         centered
         size="45.25rem"
         radius="lg"
         padding="xl"
         overlayProps={{
-          color: theme.colors.dark[10],
+          color: theme.colors.dark[9],
           opacity: 0.55,
           blur: 2,
         }}
@@ -173,13 +172,13 @@ export default function MessageLayout({
             </Flex>
           )}
           radius="md"
-          data={coWorkersSelect}
+          data={coWorkersSelect as any}
           placeholder="Select a teammate"
         />
 
         <Text fz="xs" mt="lg">
           Expand your team collaboration by inviting your teammates to join the
-          #{data?.name} channel. Share insights, and achieve more together.
+          #{selected?.name} channel. Share insights, and achieve more together.
         </Text>
         <Flex align="center" gap="md" mt="lg">
           <Button
@@ -187,7 +186,7 @@ export default function MessageLayout({
             onClick={() =>
               mutation.mutate({
                 userIds: form.values.userIds,
-                channelId: data?._id,
+                channelId: selected?._id,
               } as any)
             }
             loading={mutation.isLoading}
@@ -206,7 +205,7 @@ export default function MessageLayout({
       >
         <Flex
           bg={theme.colors.dark[7]}
-          py={data?.isChannel ? '1rem' : '1.85rem'}
+          py={selected?.isChannel ? '1rem' : '1.85rem'}
           px="1.85rem"
           align="center"
           justify="space-between"
@@ -216,24 +215,24 @@ export default function MessageLayout({
         >
           {isLoading && <Skeleton height={15} width={150} radius="md" />}
           {type === 'channel' && !isLoading && (
-            <Text># {String(data?.name)?.toLowerCase()}</Text>
+            <Text># {String(selected?.name)?.toLowerCase()}</Text>
           )}
           {type === 'conversation' && !isLoading && (
             <Flex gap="sm">
               <Avatar
-                src={`/avatars/${data?.name[0].toLowerCase()}.png`}
+                src={`/avatars/${selected?.name[0].toLowerCase()}.png`}
                 size="md"
                 radius="xl"
               ></Avatar>
-              <Text>{String(data?.name)?.toLowerCase()}</Text>
+              <Text>{String(selected?.name)?.toLowerCase()}</Text>
             </Flex>
           )}
 
-          {data?.isChannel && (
+          {selected?.isChannel && (
             <Paper radius="md" p="sm" px="md" withBorder>
               <Flex align="center">
-                {data?.collaborators?.map(
-                  (collaborator: any, index: number) => (
+                {selected?.collaborators?.map(
+                  (collaborator: User, index: number) => (
                     <Avatar
                       key={index}
                       ml="-1rem"
@@ -245,7 +244,7 @@ export default function MessageLayout({
                       opacity={1}
                       radius="xl"
                     >
-                      {collaborator.username[0].toUpperCase()}
+                      {collaborator?.username?.[0].toUpperCase()}
                     </Avatar>
                   )
                 )}
@@ -257,7 +256,7 @@ export default function MessageLayout({
                     borderRight: `1px solid ${theme.colors.dark[4]}`,
                   }}
                 >
-                  {data?.collaborators?.length}
+                  {selected?.collaborators?.length}
                 </Text>
                 <ThemeIcon
                   size="2.5rem"
@@ -277,30 +276,27 @@ export default function MessageLayout({
           )}
         </Flex>
 
-        {data && (
+        {selected && (
           <Message
             isLoading={isLoading}
             messagesLoading={messagesLoading}
             type={type}
-            theme={theme}
-            socket={socket}
-            messages={messages}
-            setMessages={setMessages}
-            data={data}
             open={open}
             channelCollaborators={channelCollaborators}
           />
         )}
 
-        {!channelCollaborators?.includes(organisationData?.profile?._id) &&
-          data?.isChannel && (
+        {!channelCollaborators?.includes(
+          organisationData?.profile?._id as string
+        ) &&
+          selected?.isChannel && (
             <Center>
               <Paper radius="lg" p="xl" withBorder mt="-4rem">
                 <Text align="center" fz="sm" mb="md">
                   Ready to dive into the world of{' '}
                   <Text span fw="bold">
                     {' '}
-                    #{data?.name}
+                    #{selected?.name}
                   </Text>
                   ? <br /> Join the conversation, collaborate with your team,
                   and make things happen!

@@ -21,7 +21,7 @@ import { useRouter } from 'next/router'
 import axios from '../services/axios'
 import { notifications } from '@mantine/notifications'
 import { NextPage } from 'next'
-import { GoogleLogin } from 'react-google-login'
+import { ApiError } from '../utils/interfaces'
 
 const Register: NextPage = () => {
   const router = useRouter()
@@ -38,7 +38,7 @@ const Register: NextPage = () => {
     mutationFn: (body) => {
       return axios.post('/auth/register', body)
     },
-    onError(error: any) {
+    onError(error: ApiError) {
       notifications.show({
         message: error?.response?.data?.data?.name,
         color: 'red',
@@ -71,14 +71,6 @@ const Register: NextPage = () => {
             </Text>
           </Text>
 
-          {/* <GoogleLogin
-            clientId="943288209734-n5p29rpfrr7tot29st0apmao3tesci1u.apps.googleusercontent.com"
-            buttonText="Login with Google"
-            onSuccess={responseGoogle}
-            onFailure={responseGoogle}
-            cookiePolicy={'single_host_origin'}
-          /> */}
-
           <Paper radius="md" p="xl" withBorder w={'40rem'} mt="xl">
             <form
               onSubmit={form.onSubmit(() =>
@@ -107,7 +99,6 @@ const Register: NextPage = () => {
                   onClick={() => {
                     window.open(
                       `${process.env.NEXT_PUBLIC_API}/auth/google/callback`,
-                      // `http://localhost:3000/api/v1/auth/google/callback`,
                       '_self'
                     )
                   }}

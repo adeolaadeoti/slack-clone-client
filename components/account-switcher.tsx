@@ -23,7 +23,7 @@ import {
 
 import { LuChevronsUpDown } from 'react-icons/lu'
 import { useRouter } from 'next/router'
-import { useAppContext } from '../providers/app-provider'
+import { ContextProps, useAppContext } from '../providers/app-provider'
 
 const useStyles = createStyles((theme) => ({
   user: {
@@ -39,7 +39,7 @@ const useStyles = createStyles((theme) => ({
 }))
 
 interface AccountSwitcherProps {
-  data: any
+  data: ContextProps['data']
 }
 
 export default function AccountSwitcher({ data }: AccountSwitcherProps) {

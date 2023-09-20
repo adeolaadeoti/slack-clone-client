@@ -16,6 +16,7 @@ import { notifications } from '@mantine/notifications'
 import { useRouter } from 'next/router'
 import React from 'react'
 import TagInputs from '../../components/tags-input'
+import { ApiError } from '../../utils/interfaces'
 
 const Coworkers: NextPage = () => {
   const router = useRouter()
@@ -47,7 +48,7 @@ const Coworkers: NextPage = () => {
     mutationFn: (body) => {
       return axios.post('/teammates', body)
     },
-    onError(error: any) {
+    onError(error: ApiError) {
       notifications.show({
         message: error?.response?.data?.data?.name,
         color: 'red',

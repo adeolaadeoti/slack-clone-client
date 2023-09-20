@@ -16,6 +16,8 @@ import { formatDate, getColorHexByIndex } from '../utils/helpers'
 import { LuReplyAll } from 'react-icons/lu'
 import { useRouter } from 'next/router'
 import { BiChevronRight } from 'react-icons/bi'
+import { MessageListProps } from '../utils/interfaces'
+import { Message } from '../utils/interfaces'
 
 const useStyles = createStyles((theme) => ({
   message: {
@@ -94,7 +96,11 @@ const useStyles = createStyles((theme) => ({
   },
 }))
 
-export default function MessageList({ userId, messages, isThread }: any) {
+export default function MessageList({
+  userId,
+  isThread,
+  messages,
+}: MessageListProps) {
   const { socket, theme } = useAppContext()
   const messageRefs = useRef<Array<HTMLDivElement>>([])
   const { classes } = useStyles()
@@ -130,11 +136,11 @@ export default function MessageList({ userId, messages, isThread }: any) {
 
   return (
     <>
-      {messages?.map((msg: any) => {
+      {messages?.map((msg) => {
         if (msg.type === 'date') {
           return (
             <Divider
-              key={msg.id}
+              key={msg._id}
               styles={{
                 label: {
                   '& > div': {
@@ -226,10 +232,12 @@ export default function MessageList({ userId, messages, isThread }: any) {
                 <Flex direction="column">
                   <Flex align="center" gap="md">
                     <Text fz="sm" fw="bold" c="white" span>
-                      {msg?.sender?.username ?? msg?.username}
+                      {msg?.sender?.username}
+                      {/* {msg?.sender?.username ?? msg?.username} */}
                     </Text>
                     <Tooltip
-                      label={msg?.time ?? formatDate(msg?.createdAt).time}
+                      label={formatDate(msg?.createdAt)?.time}
+                      // label={msg?.time ?? formatDate(msg?.createdAt).time}
                       withArrow
                       position="right"
                     >
@@ -239,23 +247,24 @@ export default function MessageList({ userId, messages, isThread }: any) {
                         c={theme.colors.dark[3]}
                         span
                       >
-                        {msg?.timeRender ??
-                          formatDate(msg?.createdAt).timeRender}
+                        {formatDate(msg?.createdAt)?.timeRender}
+                        {/* {msg?.timeRender ??
+                          formatDate(msg?.createdAt).timeRender} */}
                       </Text>
                     </Tooltip>
                   </Flex>
                   <div
                     className="chat-wrapper"
                     dangerouslySetInnerHTML={{
-                      __html: DOMPurify.sanitize(msg.content, {
+                      __html: DOMPurify.sanitize(msg?.content as string, {
                         ADD_ATTR: ['target'],
                       }),
                     }}
                   />
                   <Flex align="center" gap="sm">
-                    {msg.reactions?.map((reaction: any) => {
+                    {msg.reactions?.map((reaction) => {
                       const reactionsFrom = reaction.reactedToBy.map(
-                        (user: any) => user.username
+                        (user) => user.username
                       )
 
                       return (
@@ -276,7 +285,7 @@ export default function MessageList({ userId, messages, isThread }: any) {
                             }
                             style={{
                               backgroundColor: reaction?.reactedToBy?.some(
-                                (user: any) => user?._id === userId
+                                (user) => user?._id === userId
                               )
                                 ? theme.colors.dark[5]
                                 : 'transparent',
@@ -291,7 +300,7 @@ export default function MessageList({ userId, messages, isThread }: any) {
                   </Flex>
                 </Flex>
               </Flex>
-              {msg.threadLastReplyDate && (
+              {(msg as Message).threadLastReplyDate && (
                 <Flex
                   align="center"
                   gap="sm"
@@ -301,7 +310,7 @@ export default function MessageList({ userId, messages, isThread }: any) {
                   }
                 >
                   <Flex align="center">
-                    {msg?.threadReplies?.map((user: any, index: number) => (
+                    {(msg as Message)?.threadReplies?.map((user, index) => (
                       <Avatar
                         key={index}
                         ml="-1rem"
@@ -313,13 +322,16 @@ export default function MessageList({ userId, messages, isThread }: any) {
                         opacity={1}
                         radius="xl"
                       >
-                        {user.username[0].toUpperCase()}
+                        {user?.username?.[0].toUpperCase()}
                       </Avatar>
                     ))}
                   </Flex>
-                  {msg.threadRepliesCount && (
+                  {msg.hasOwnProperty('threadRepliesCount') && (
                     <Text fz="xs" c={theme.colors.dark[2]}>
-                      {msg.threadRepliesCount} replies
+                      {(msg as Message).threadRepliesCount}{' '}
+                      {(msg as Message).threadRepliesCount === 1
+                        ? 'reply'
+                        : 'replies'}
                     </Text>
                   )}
                   <Text
@@ -327,7 +339,11 @@ export default function MessageList({ userId, messages, isThread }: any) {
                     c={theme.colors.dark[3]}
                     className={classes.reply}
                   >
-                    Last reply {formatDate(msg.threadLastReplyDate).timeRender}
+                    Last reply{' '}
+                    {
+                      formatDate((msg as Message).threadLastReplyDate as string)
+                        ?.timeRender
+                    }
                   </Text>
                   <Flex align="center" gap="xl" className={classes.view}>
                     <Text fz="xs" c={theme.colors.dark[3]}>

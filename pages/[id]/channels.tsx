@@ -9,6 +9,7 @@ import { useRouter } from 'next/router'
 import React from 'react'
 import Input from '../../components/input'
 import { getColorByIndex } from '../../utils/helpers'
+import { ApiError, User } from '../../utils/interfaces'
 
 const Channels: NextPage = () => {
   const router = useRouter()
@@ -39,7 +40,7 @@ const Channels: NextPage = () => {
     mutationFn: (body) => {
       return axios.post('/channel', body)
     },
-    onError(error: any) {
+    onError(error: ApiError) {
       notifications.show({
         message: error?.response?.data?.data?.name,
         color: 'red',
@@ -84,10 +85,10 @@ const Channels: NextPage = () => {
           style={{ borderTop: '.1px solid #53565C' }}
         >
           <Text size="xs">Direct messages</Text>
-          {coWorkers?.map((coWorker: any, index: number) => (
+          {coWorkers?.map((coWorker: User, index: number) => (
             <Flex align="center" gap="sm" mt="sm">
               <Avatar size="md" color={getColorByIndex(index)} radius="xl">
-                {coWorker?.email[0].toUpperCase()}
+                {coWorker?.email?.[0].toUpperCase()}
               </Avatar>
 
               <Text size="xs" transform="lowercase">

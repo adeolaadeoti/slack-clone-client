@@ -19,6 +19,7 @@ import React from 'react'
 import { BsArrowRightShort } from 'react-icons/bs'
 import { getColorByIndex } from '../utils/helpers'
 import { useAppContext } from '../providers/app-provider'
+import { ApiError, Data } from '../utils/interfaces'
 
 const Workspaces: NextPage = () => {
   const router = useRouter()
@@ -29,7 +30,7 @@ const Workspaces: NextPage = () => {
     mutationFn: () => {
       return axios.post('/organisation')
     },
-    onError(error: any) {
+    onError(error: ApiError) {
       notifications.show({
         message: error?.response?.data?.data?.name,
         color: 'red',
@@ -52,8 +53,8 @@ const Workspaces: NextPage = () => {
 
   const organisations = query?.data?.data?.data
 
-  function handleOpenWorkspace(organisation: any) {
-    setData(null)
+  function handleOpenWorkspace(organisation: Data) {
+    setData(undefined)
     localStorage.setItem('organisationId', organisation?._id)
     router.push(`/c/${organisation?.channels?.[0]?._id}`)
     localStorage.setItem('channel', 'true')
@@ -147,7 +148,7 @@ const Workspaces: NextPage = () => {
           )}
           <Stack>
             {organisations?.length >= 1 &&
-              organisations?.map((organisation: any, index: number) => (
+              organisations?.map((organisation: Data, index: number) => (
                 <Flex
                   pb="md"
                   align="center"

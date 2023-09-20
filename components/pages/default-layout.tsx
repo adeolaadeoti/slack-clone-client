@@ -7,7 +7,6 @@ import {
   Avatar,
   Tooltip,
   ActionIcon,
-  Switch,
   UnstyledButton,
   Stack,
   Skeleton,
@@ -16,7 +15,7 @@ import {
   Flex,
 } from '@mantine/core'
 import { getColorByIndex } from '../../utils/helpers'
-import { TbHeadphonesOff, TbHeadphones, TbHash } from 'react-icons/tb'
+import { TbHash } from 'react-icons/tb'
 import { HiPlus } from 'react-icons/hi'
 import React from 'react'
 import AccountSwitcher from '../account-switcher'
@@ -31,6 +30,13 @@ import axios from '../../services/axios'
 import { notifications } from '@mantine/notifications'
 import TagInputs from '../tags-input'
 import Huddle from '../huddle'
+import {
+  ApiError,
+  ApiSuccess,
+  Channel,
+  Conversation,
+  DefaultLayoutProps,
+} from '../../utils/interfaces'
 
 const useStyles = createStyles((theme) => ({
   section: {
@@ -62,14 +68,8 @@ const useStyles = createStyles((theme) => ({
 }))
 export default function DefaultLayout({
   children,
-  conversations,
-  channels,
-  data,
-  selected,
-  setSelected,
-  theme,
   thread,
-}: any) {
+}: DefaultLayoutProps) {
   const router = useRouter()
   const { classes } = useStyles()
   const [opened, { open, close }] = useDisclosure(false)
@@ -81,6 +81,13 @@ export default function DefaultLayout({
     refreshApp,
     socket,
     data: organisationData,
+
+    conversations,
+    channels,
+    setMessages,
+    selected,
+    setSelected,
+    theme,
   } = useAppContext()
   const userId = organisationData?.profile?._id
 
@@ -99,15 +106,15 @@ export default function DefaultLayout({
     mutationFn: (body) => {
       return axios.post('/channel', body)
     },
-    onError(error: any) {
+    onError(error: ApiError) {
       notifications.show({
         message: error?.response?.data?.data?.name,
         color: 'red',
         p: 'md',
       })
     },
-    onSuccess(data: any) {
-      setChannels((channels: any) => [...channels, data?.data?.data])
+    onSuccess(data: ApiSuccess['data']) {
+      setChannels((channels) => [...(channels as Channel[]), data?.data?.data])
       refreshApp()
       close()
       form.reset()
@@ -135,7 +142,7 @@ export default function DefaultLayout({
     mutationFn: (body) => {
       return axios.post('/teammates', body)
     },
-    onError(error: any) {
+    onError(error: ApiError) {
       notifications.show({
         message: error?.response?.data?.data?.name,
         color: 'red',
@@ -155,17 +162,17 @@ export default function DefaultLayout({
     },
   })
 
-  function handleChannel(channel: any) {
+  function handleChannel(channel: Channel) {
     setSelected(channel)
     router.push(`/c/${channel?._id}`)
     localStorage.setItem('channel', 'true')
-    // setMessages([])
+    setMessages([])
   }
-  function handleConversation(data: any) {
-    setSelected(data)
-    router.push(`/c/${data?._id}`)
+  function handleConversation(conversation: Conversation) {
+    setSelected(conversation)
+    router.push(`/c/${conversation?._id}`)
     localStorage.setItem('channel', 'false')
-    // setMessages([])
+    setMessages([])
   }
 
   const [popupWindow, setPopupWindow] = React.useState(false)
@@ -174,13 +181,13 @@ export default function DefaultLayout({
       <Modal
         opened={inviteOpened}
         onClose={inviteClose}
-        title={`Invite people to ${data?.name}`}
+        title={`Invite people to ${organisationData?.name}`}
         centered
         size="45.25rem"
         radius="lg"
         padding="xl"
         overlayProps={{
-          color: theme.colors.dark[10],
+          color: theme.colors.dark[9],
           opacity: 0.55,
           blur: 2,
         }}
@@ -216,7 +223,7 @@ export default function DefaultLayout({
         radius="lg"
         padding="xl"
         overlayProps={{
-          color: theme.colors.dark[10],
+          color: theme.colors.dark[9],
           opacity: 0.55,
           blur: 2,
         }}
@@ -263,7 +270,7 @@ export default function DefaultLayout({
         >
           <Navbar>
             <Navbar.Section mt="sm" p="sm" pt="xs" pb="1.18rem">
-              <AccountSwitcher data={data} />
+              <AccountSwitcher data={organisationData} />
             </Navbar.Section>
 
             <Navbar.Section className={classes.section} px="0" mx="sm">
@@ -285,7 +292,7 @@ export default function DefaultLayout({
                 </Stack>
               )}
 
-              {channels?.map((channel: any) => (
+              {channels?.map((channel) => (
                 <UnstyledButton
                   w="100%"
                   px="sm"
@@ -296,11 +303,13 @@ export default function DefaultLayout({
                     transition: 'all .2s ease',
                     borderRadius: 10,
                     fontWeight: channel?.hasNotOpen?.includes(
-                      data?.profile?._id
+                      organisationData?.profile?._id ?? ''
                     )
                       ? 'bold'
                       : '400',
-                    color: channel?.hasNotOpen?.includes(data?.profile?._id)
+                    color: channel?.hasNotOpen?.includes(
+                      organisationData?.profile?._id ?? ''
+                    )
                       ? 'white'
                       : '#C1C2C5',
                     backgroundColor:
@@ -320,7 +329,7 @@ export default function DefaultLayout({
                   Direct messages
                 </Text>
                 <Tooltip
-                  label={`Invite people to ${data?.name}`}
+                  label={`Invite people to ${organisationData?.name}`}
                   withArrow
                   position="right"
                 >
@@ -335,7 +344,7 @@ export default function DefaultLayout({
                   <Skeleton height={15} width={150} radius="md" />
                 </Stack>
               )}
-              {conversations?.map((convo: any, index: any) => (
+              {conversations?.map((convo, index) => (
                 <UnstyledButton
                   w="100%"
                   px="sm"
@@ -345,10 +354,14 @@ export default function DefaultLayout({
                   style={{
                     transition: 'all .2s ease',
                     borderRadius: 10,
-                    fontWeight: convo?.hasNotOpen?.includes(data?.profile?._id)
+                    fontWeight: convo?.hasNotOpen?.includes(
+                      organisationData?.profile?._id ?? ''
+                    )
                       ? 'bold'
                       : '400',
-                    color: convo?.hasNotOpen?.includes(data?.profile?._id)
+                    color: convo?.hasNotOpen?.includes(
+                      organisationData?.profile?._id ?? ''
+                    )
                       ? 'white'
                       : '#C1C2C5',
 
@@ -395,10 +408,10 @@ export default function DefaultLayout({
 
             {selected?.isConversation && !selected?.isSelf && (
               <Huddle
-                selected={selected}
-                theme={theme}
-                socket={socket}
-                userId={userId}
+                // selected={selected}
+                // theme={theme}
+                // socket={socket}
+                userId={userId as string}
                 popupWindow={popupWindow}
                 setPopupWindow={setPopupWindow}
               />

@@ -79,7 +79,6 @@ export default function DefaultLayout({
     organisationId,
     setChannels,
     refreshApp,
-    socket,
     data: organisationData,
 
     conversations,

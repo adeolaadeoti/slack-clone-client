@@ -1,6 +1,4 @@
-import { MantineTheme } from '@mantine/core'
 import { AxiosError, AxiosRequestConfig } from 'axios'
-import { ContextProps } from '../providers/app-provider'
 
 export interface DefaultLayoutProps {
   children: React.ReactNode
@@ -27,7 +25,6 @@ export interface MessageProps {
   type?: 'channel' | 'conversation'
   isThread?: boolean
   open?: () => void
-  channelCollaborators?: string[]
 }
 
 interface AxiosErrorData {

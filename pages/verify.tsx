@@ -4,17 +4,18 @@ import {
   Flex,
   Text,
   Stack,
+  PinInput,
+  Loader,
   Button as MantineButton,
 } from '@mantine/core'
 import { useForm } from '@mantine/form'
 import SlackLogo from '../components/slack-logo'
-import { PinInput } from '@mantine/core'
 import { IoLogoGithub } from 'react-icons/io'
 import { useMutation } from '@tanstack/react-query'
 import { useRouter } from 'next/router'
 import axios from '../services/axios'
 import { notifications } from '@mantine/notifications'
-import { Loader } from '@mantine/core'
+
 import { NextPage } from 'next'
 import { ApiError, ApiSuccess } from '../utils/interfaces'
 

@@ -22,7 +22,7 @@ import { notifications } from '@mantine/notifications'
 import MessageList from './message-list'
 import { useRouter } from 'next/router'
 import { GoMegaphone } from 'react-icons/go'
-import { Message, MessageProps, User } from '../utils/interfaces'
+import { Message as IMessage, MessageProps, User } from '../utils/interfaces'
 
 const Message = ({
   messagesLoading,
@@ -30,7 +30,6 @@ const Message = ({
   type,
   isThread = false,
   open,
-  channelCollaborators,
 }: MessageProps) => {
   const router = useRouter()
   const { threadId } = router.query
@@ -44,6 +43,7 @@ const Message = ({
     messages,
     setMessages,
     theme,
+    channelCollaborators,
   } = useAppContext()
   const userId = organisationData?.profile?._id
   const conversationCollaborators = conversations?.map((conversation) => {
@@ -142,7 +142,7 @@ const Message = ({
         channelCollaborators?.includes(userId ?? '')
       ) {
         setMessages((prevMessages) => [
-          ...(prevMessages as Message[]),
+          ...(prevMessages as IMessage[]),
           newMessage,
         ])
       }

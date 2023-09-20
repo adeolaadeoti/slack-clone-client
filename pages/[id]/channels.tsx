@@ -86,7 +86,7 @@ const Channels: NextPage = () => {
         >
           <Text size="xs">Direct messages</Text>
           {coWorkers?.map((coWorker: User, index: number) => (
-            <Flex align="center" gap="sm" mt="sm">
+            <Flex key={coWorker._id} align="center" gap="sm" mt="sm">
               <Avatar size="md" color={getColorByIndex(index)} radius="xl">
                 {coWorker?.email?.[0].toUpperCase()}
               </Avatar>

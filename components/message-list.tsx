@@ -1,5 +1,4 @@
-import { useEffect, useRef } from 'react'
-import React from 'react'
+import React, { useEffect, useRef } from 'react'
 import {
   Avatar,
   Divider,
@@ -16,8 +15,7 @@ import { formatDate, getColorHexByIndex } from '../utils/helpers'
 import { LuReplyAll } from 'react-icons/lu'
 import { useRouter } from 'next/router'
 import { BiChevronRight } from 'react-icons/bi'
-import { MessageListProps } from '../utils/interfaces'
-import { Message } from '../utils/interfaces'
+import { MessageListProps, Message } from '../utils/interfaces'
 
 const useStyles = createStyles((theme) => ({
   message: {

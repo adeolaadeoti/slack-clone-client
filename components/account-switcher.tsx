@@ -46,7 +46,7 @@ export default function AccountSwitcher({ data }: AccountSwitcherProps) {
   const router = useRouter()
   const { classes, theme, cx } = useStyles()
   const { socket } = useAppContext()
-  const [userMenuOpened, setUserMenuOpened] = useState(false)
+  const [, setUserMenuOpened] = useState(false)
 
   function handleLogout() {
     localStorage.removeItem('organisationId')

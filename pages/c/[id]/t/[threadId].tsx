@@ -1,10 +1,17 @@
 import React from 'react'
 import Conversation from '..'
-import { Divider, Flex, Text, Tooltip } from '@mantine/core'
+import {
+  Divider,
+  Flex,
+  Text,
+  Tooltip,
+  Avatar,
+  createStyles,
+  getStylesRef,
+} from '@mantine/core'
 import { useAppContext } from '../../../../providers/app-provider'
 import { IoMdClose } from 'react-icons/io'
 import { useRouter } from 'next/router'
-import { Avatar } from '@mantine/core'
 import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css'
 import { useQuery } from '@tanstack/react-query'
 import axios from '../../../../services/axios'
@@ -12,9 +19,7 @@ import dynamic from 'next/dynamic'
 const Message = dynamic(() => import('../../../../components/message'), {
   ssr: false,
 })
-import { createStyles, getStylesRef } from '@mantine/core'
 import DOMPurify from 'dompurify'
-import 'react-draft-wysiwyg/dist/react-draft-wysiwyg.css'
 import { formatDate } from '../../../../utils/helpers'
 import { Thread } from '../../../../utils/interfaces'
 
@@ -63,7 +68,7 @@ const useStyles = createStyles((theme) => ({
   },
 }))
 
-export default function Thread() {
+export default function ThreadPage() {
   const {
     theme,
     socket,
@@ -250,7 +255,7 @@ export default function Thread() {
           )}
         </Flex>
       )}
-      <Message isThread={true} />
+      <Message isThread />
     </Conversation>
   )
 }

@@ -14,7 +14,6 @@ import SlackLogo from '../components/slack-logo'
 import Input from '../components/input'
 import Button from '../components/button'
 import { BiLogoGoogle } from 'react-icons/bi'
-import { FaApple } from 'react-icons/fa'
 import { IoLogoGithub } from 'react-icons/io'
 import { useMutation } from '@tanstack/react-query'
 import { useRouter } from 'next/router'
@@ -50,11 +49,6 @@ const Register: NextPage = () => {
       router.push('/verify')
     },
   })
-
-  const responseGoogle = () => {
-    // Redirect to Google OAuth for authentication
-    window.location.href = '/auth/google'
-  }
 
   return (
     <Center p="xl" h="100vh" w="100vw" bg="#111317">

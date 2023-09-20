@@ -282,7 +282,6 @@ export default function MessageLayout({
             messagesLoading={messagesLoading}
             type={type}
             open={open}
-            channelCollaborators={channelCollaborators}
           />
         )}
 

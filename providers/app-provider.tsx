@@ -1,5 +1,5 @@
 import { UseQueryResult, useQuery } from '@tanstack/react-query'
-import React, { createContext, useContext, useState } from 'react'
+import React, { createContext, useContext, useState, useMemo } from 'react'
 import axios from '../services/axios'
 import {
   Center,
@@ -18,6 +18,7 @@ import {
   Message,
   Thread,
 } from '../utils/interfaces'
+
 const socket = io(process.env.NEXT_PUBLIC_SOCKET as string)
 
 export interface ContextProps {
@@ -50,6 +51,8 @@ export interface ContextProps {
   selectedMessage: Message | undefined
   setSelectedMessage: React.Dispatch<React.SetStateAction<Message | undefined>>
   organisationId: string | undefined
+  channelCollaborators: string[]
+  setChannelCollaborators: React.Dispatch<React.SetStateAction<string[]>>
 }
 
 const AppContext = createContext<ContextProps | undefined>(undefined)
@@ -60,6 +63,9 @@ export const AppContextProvider = React.memo(
     const [conversations, setConversations] =
       useState<ContextProps['conversations']>()
     const [channels, setChannels] = useState<ContextProps['channels']>()
+    const [channelCollaborators, setChannelCollaborators] = useState<
+      ContextProps['channelCollaborators']
+    >([''])
 
     const theme = useMantineTheme()
     const router = useRouter()
@@ -190,7 +196,7 @@ export const AppContextProvider = React.memo(
 
     React.useEffect(() => {
       setOrganisationId(localStorage.getItem('organisationId') as string)
-      setChannel(localStorage.getItem('channel') === 'true' ? true : false)
+      setChannel(localStorage.getItem('channel') === 'true')
       socket.on('message-updated', ({ id, message, isThread }) => {
         if (id === selectedMessage?._id) {
           setSelectedMessage(message)
@@ -301,6 +307,12 @@ export const AppContextProvider = React.memo(
       }
     }, [data, id])
 
+    React.useEffect(() => {
+      setChannelCollaborators(
+        selected?.collaborators?.map((user) => user._id) as string[]
+      )
+    }, [selected])
+
     if (query.isLoading && query.data)
       return (
         <Center p="xl" h="100vh" w="100vw" bg={theme.colors.dark[9]}>
@@ -319,38 +331,66 @@ export const AppContextProvider = React.memo(
         </Center>
       )
 
+    const contextValue = useMemo(() => {
+      return {
+        organisationId,
+        theme,
+        socket,
+        data,
+        setData,
+        conversations,
+        setConversations,
+        messages,
+        setMessages,
+        selected,
+        setSelected,
+        channels,
+        setChannels,
+        refreshApp: query.refetch,
+        isLoading: query.isLoading,
+        channel,
+        channelMessagesQuery,
+        conversationMessagesQuery,
+        channelQuery,
+        conversationQuery,
+        threadMessages,
+        setThreadMessages,
+        threadMessagesQuery,
+        selectedMessage,
+        setSelectedMessage,
+        channelCollaborators,
+        setChannelCollaborators,
+      }
+    }, [
+      organisationId,
+      theme,
+      socket,
+      data,
+      setData,
+      conversations,
+      setConversations,
+      messages,
+      setMessages,
+      selected,
+      setSelected,
+      channels,
+      setChannels,
+      channel,
+      channelMessagesQuery,
+      conversationMessagesQuery,
+      channelQuery,
+      conversationQuery,
+      threadMessages,
+      setThreadMessages,
+      threadMessagesQuery,
+      selectedMessage,
+      setSelectedMessage,
+      channelCollaborators,
+      setChannelCollaborators,
+    ])
+
     return (
-      <AppContext.Provider
-        value={{
-          organisationId,
-          theme,
-          socket,
-          data,
-          setData,
-          conversations,
-          setConversations,
-          messages,
-          setMessages,
-          selected,
-          setSelected,
-          channels,
-          setChannels,
-          refreshApp: query.refetch,
-          isLoading: query.isLoading,
-          channel,
-          channelMessagesQuery,
-          conversationMessagesQuery,
-          channelQuery,
-          conversationQuery,
-          threadMessages,
-          setThreadMessages,
-          threadMessagesQuery,
-          selectedMessage,
-          setSelectedMessage,
-        }}
-      >
-        {children}
-      </AppContext.Provider>
+      <AppContext.Provider value={contextValue}>{children}</AppContext.Provider>
     )
   }
 )

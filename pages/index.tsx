@@ -24,7 +24,7 @@ import { ApiError, Data } from '../utils/interfaces'
 const Workspaces: NextPage = () => {
   const router = useRouter()
   const [email, setEmail] = React.useState('')
-  const { refreshApp, setData } = useAppContext()
+  const { setData } = useAppContext()
 
   const mutation = useMutation({
     mutationFn: () => {
@@ -146,48 +146,8 @@ const Workspaces: NextPage = () => {
               </Flex>
             </Center>
           )}
-          <Stack>
-            {organisations?.length >= 1 &&
-              organisations?.map((organisation: Data, index: number) => (
-                <Flex
-                  pb="md"
-                  align="center"
-                  key={organisation?._id}
-                  style={{
-                    borderBottom:
-                      organisations.length - 1 === index
-                        ? ''
-                        : '1px solid #373A40',
-                    justifyContent: 'space-between',
-                  }}
-                >
-                  <Flex align="center" gap="sm">
-                    <Avatar
-                      size="lg"
-                      color={getColorByIndex(index)}
-                      radius="xl"
-                    >
-                      {organisation.name[0].toUpperCase()}
-                    </Avatar>
-                    <Flex direction="column">
-                      <Text c="white" transform="capitalize">
-                        {organisation.name}
-                      </Text>
-                      <Text size="xs" transform="capitalize">
-                        {organisation.coWorkers.length} members
-                      </Text>
-                    </Flex>
-                  </Flex>
-                  <Button
-                    onClick={() => handleOpenWorkspace(organisation)}
-                    rightIcon={<BsArrowRightShort />}
-                    appearance="outline"
-                  >
-                    Open
-                  </Button>
-                </Flex>
-              ))}
-          </Stack>
+
+          
         </Paper>
       </Stack>
     </Center>
